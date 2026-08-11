@@ -1,0 +1,505 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.app {
+  min-height: 100vh;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.navbar {
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8%;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.navbar nav {
+  display: flex;
+  gap: 30px;
+}
+
+.navbar a {
+  text-decoration: none;
+  color: #475569;
+  font-weight: 500;
+}
+
+.navbar a:hover {
+  color: #2563eb;
+}
+
+.hero {
+  min-height: 600px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.hero-content {
+  max-width: 850px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: #dbeafe;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 25px;
+}
+
+.hero h1 {
+  font-size: 64px;
+  line-height: 1.1;
+  margin-bottom: 25px;
+}
+
+.hero h1 span {
+  color: #2563eb;
+}
+
+.hero-description {
+  max-width: 650px;
+  margin: auto;
+  font-size: 19px;
+  line-height: 1.7;
+  color: #64748b;
+}
+
+.primary-button {
+  margin-top: 35px;
+  padding: 15px 28px;
+  border: none;
+  border-radius: 10px;
+  background: #2563eb;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary-button:hover {
+  background: #1d4ed8;
+}
+
+.features {
+  padding: 80px 8%;
+  background: white;
+  text-align: center;
+}
+
+.features h2 {
+  font-size: 36px;
+  margin-bottom: 50px;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 25px;
+}
+
+.feature-card {
+  padding: 30px;
+  border: 1px solid #e2e8f0;
+  border-radius: 15px;
+  background: #f8fafc;
+  text-align: left;
+  transition: transform 0.2s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+}
+
+.icon {
+  font-size: 35px;
+  margin-bottom: 18px;
+}
+
+.feature-card h3 {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+.feature-card p {
+  color: #64748b;
+  line-height: 1.6;
+}
+
+footer {
+  padding: 30px;
+  text-align: center;
+  background: #0f172a;
+  color: #cbd5e1;
+}
+
+@media (max-width: 900px) {
+  .feature-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hero h1 {
+    font-size: 48px;
+  }
+}
+
+@media (max-width: 600px) {
+  .navbar {
+    padding: 0 5%;
+  }
+
+  .navbar nav {
+    display: none;
+  }
+
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero h1 {
+    font-size: 40px;
+  }
+}
+
+/* =========================
+   CAREER ANALYZER
+========================= */
+
+.analyzer-page {
+  min-height: calc(100vh - 70px);
+  padding: 70px 8%;
+  background: #f8fafc;
+}
+
+.analyzer-header {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto 50px;
+}
+
+.analyzer-header h1 {
+  font-size: 48px;
+  margin: 20px 0;
+}
+
+.analyzer-header h1 span {
+  color: #2563eb;
+}
+
+.analyzer-header p:last-child {
+  color: #64748b;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.analyzer-container {
+  max-width: 1200px;
+  margin: auto;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 30px;
+}
+
+.input-card {
+  background: white;
+  padding: 30px;
+
+  border-radius: 16px;
+
+  border: 1px solid #e2e8f0;
+
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+}
+
+.input-card h2 {
+  margin-bottom: 10px;
+}
+
+.input-card p {
+  color: #64748b;
+  margin-bottom: 20px;
+}
+
+.input-card textarea {
+  width: 100%;
+  min-height: 320px;
+
+  padding: 15px;
+
+  border: 1px solid #cbd5e1;
+
+  border-radius: 10px;
+
+  resize: vertical;
+
+  font-family: inherit;
+
+  font-size: 15px;
+
+  outline: none;
+}
+
+.input-card textarea:focus {
+  border-color: #2563eb;
+}
+
+.character-count {
+  text-align: right;
+
+  margin-top: 8px;
+
+  font-size: 13px;
+
+  color: #94a3b8;
+}
+
+.analyze-section {
+  display: flex;
+  justify-content: center;
+
+  margin-top: 40px;
+}
+
+.analyze-button {
+  padding: 16px 35px;
+
+  font-size: 17px;
+}
+
+.back-button {
+  border: none;
+
+  background: transparent;
+
+  color: #2563eb;
+
+  font-size: 15px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.back-button:hover {
+  text-decoration: underline;
+}
+
+
+@media (max-width: 800px) {
+
+  .analyzer-container {
+    grid-template-columns: 1fr;
+  }
+
+  .analyzer-header h1 {
+    font-size: 38px;
+  }
+
+}
+/* =========================
+   AI ANALYSIS RESULT
+========================= */
+
+.analysis-result {
+  max-width: 1000px;
+  margin: 50px auto 0;
+
+  background: white;
+
+  border: 1px solid #e2e8f0;
+
+  border-radius: 18px;
+
+  padding: 35px;
+
+  box-shadow: 0 15px 40px rgba(15, 23, 42, 0.08);
+}
+
+.analysis-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+
+  padding-bottom: 25px;
+
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.analysis-header span {
+  font-size: 35px;
+}
+
+.analysis-header h2 {
+  margin: 0 0 5px;
+
+  font-size: 25px;
+}
+
+.analysis-header p {
+  margin: 0;
+
+  color: #64748b;
+}
+
+.analysis-content {
+  margin-top: 30px;
+
+  white-space: pre-wrap;
+
+  line-height: 1.8;
+
+  color: #334155;
+
+  font-size: 16px;
+}
+
+.error-message {
+  max-width: 700px;
+
+  margin: 25px auto;
+
+  padding: 15px 20px;
+
+  border-radius: 10px;
+
+  background: #fee2e2;
+
+  color: #b91c1c;
+
+  text-align: center;
+}
+
+.analyze-button:disabled {
+  opacity: 0.7;
+
+  cursor: not-allowed;
+}
+
+/* ================================
+   CAREER ANALYSIS RESULTS
+================================ */
+
+.career-results {
+  width: min(1100px, 92%);
+  margin: 50px auto;
+}
+
+.score-card {
+  background: white;
+  border-radius: 22px;
+  padding: 35px;
+  margin-bottom: 25px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+}
+
+.score-card h2 {
+  font-size: 64px;
+  margin: 10px 0;
+  font-weight: 800;
+}
+
+.result-label {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  margin-bottom: 25px;
+}
+
+.result-card {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.result-card h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 22px;
+}
+
+.full-card {
+  margin-bottom: 25px;
+}
+
+.result-card ul {
+  padding-left: 22px;
+  margin-bottom: 0;
+}
+
+.result-card li {
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.tag-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.skill-tag,
+.gap-tag {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.skill-tag {
+  background: #dcfce7;
+}
+
+.gap-tag {
+  background: #fee2e2;
+}
+
+.analyze-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+
+  .result-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .score-card h2 {
+    font-size: 48px;
+  }
+
+  .result-card {
+    padding: 22px;
+  }
+}
