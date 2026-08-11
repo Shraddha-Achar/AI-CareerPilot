@@ -4,9 +4,56 @@ function CareerAnalyzer() {
   const [resume, setResume] = useState("");
   const [jobDescription, setJobDescription] = useState("");
 
+  const [resumeFile, setResumeFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const handleResumeUpload = async (event) => {
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  if (file.type !== "application/pdf") {
+    setError("Please upload a PDF file.");
+    return;
+  }
+
+  setResumeFile(file);
+  setUploading(true);
+  setError("");
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const response = await fetch(
+      "http://127.0.0.1:8000/api/extract-resume",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to extract resume.");
+    }
+
+    const data = await response.json();
+
+    setResume(data.text);
+  } catch (error) {
+    console.error(error);
+
+    setError(
+      "Unable to extract your resume. Please try another PDF."
+    );
+  } finally {
+    setUploading(false);
+  }
+};
 
   const handleAnalyze = async () => {
     if (!resume.trim() || !jobDescription.trim()) {
@@ -80,17 +127,42 @@ function CareerAnalyzer() {
 
           <h2>📄 Your Resume</h2>
 
-          <p>Paste your resume content below.</p>
+          <p>
+            Upload your resume PDF or paste your resume below.
+          </p>
 
-          <textarea
-            placeholder="Paste your resume here..."
-            value={resume}
-            onChange={(e) => setResume(e.target.value)}
-          />
+        <label className="upload-button">
+          📄 Choose Resume PDF
 
-          <div className="character-count">
-            {resume.length} characters
-          </div>
+        <input
+          type="file"
+          accept=".pdf,application/pdf"
+          onChange={handleResumeUpload}
+          hidden
+        />
+        </label>
+
+        {uploading && (
+        <p className="upload-status">
+        🤖 Extracting your resume...
+        </p>
+        )}
+
+        {resumeFile && !uploading && (
+        <p className="upload-status">
+        ✅ {resumeFile.name} uploaded successfully
+        </p>
+        )}
+
+        <textarea
+        placeholder="Paste your resume here..."
+        value={resume}
+        onChange={(e) => setResume(e.target.value)}
+        />
+
+        <div className="character-count">
+          {resume.length} characters
+        </div>
 
         </div>
 

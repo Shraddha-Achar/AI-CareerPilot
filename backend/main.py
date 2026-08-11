@@ -1,7 +1,10 @@
 import os
+import io
+import json
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from pypdf import PdfReader
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from google import genai
@@ -133,3 +136,42 @@ Rules:
                 "raw_response": response.text
             }
         }
+
+@app.post("/api/extract-resume")
+async def extract_resume(file: UploadFile = File(...)):
+
+    if file.content_type != "application/pdf":
+        raise HTTPException(
+            status_code=400,
+            detail="Please upload a PDF file."
+        )
+
+    file_data = await file.read()
+
+    try:
+        pdf = PdfReader(io.BytesIO(file_data))
+
+        extracted_text = ""
+
+        for page in pdf.pages:
+            text = page.extract_text()
+
+            if text:
+                extracted_text += text + "\n"
+
+        if not extracted_text.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="Could not extract text from this PDF."
+            )
+
+        return {
+            "filename": file.filename,
+            "text": extracted_text.strip()
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Could not process PDF: {str(e)}"
+        )
