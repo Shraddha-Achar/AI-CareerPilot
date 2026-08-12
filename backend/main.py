@@ -68,7 +68,7 @@ def health_check():
 def analyze_career(request: CareerAnalysisRequest):
 
     prompt = f"""
-You are an expert AI career advisor, resume analyst, and technical recruiter.
+You are an expert AI career advisor, resume analyst, ATS specialist, and technical recruiter.
 
 Analyze the candidate's resume against the target job description.
 
@@ -84,27 +84,70 @@ Do not use Markdown.
 Do not use ```json.
 Do not add explanations outside the JSON.
 
-Use exactly this structure:
+Use EXACTLY this structure:
 
 {{
     "match_score": 0,
+
     "matching_skills": [],
+
     "missing_skills": [],
+
     "strengths": [],
+
     "improvements": [],
-    "recommended_learning": []
+
+    "recommended_learning": [],
+
+    "ats_score": 0,
+
+    "ats_analysis": {{
+        "keyword_optimization": 0,
+        "skills_relevance": 0,
+        "resume_structure": 0,
+        "job_alignment": 0
+    }},
+
+    "ats_issues": [],
+
+    "ats_recommendations": []
 }}
 
-Rules:
+RULES:
 
-- match_score must be a number from 0 to 100.
-- matching_skills must contain skills found in both the resume and job description.
-- missing_skills must contain important job-related skills missing from the resume.
-- strengths must contain specific strengths supported by the resume.
-- improvements must contain practical suggestions for improving the resume or skills.
-- recommended_learning must contain useful technologies, concepts, or skills the candidate should learn.
-- Do not invent experience that is not present in the resume.
-- Keep each list concise and useful.
+1. match_score must be a number from 0 to 100.
+
+2. matching_skills must contain important skills found in BOTH the resume and job description.
+
+3. missing_skills must contain important job-related skills that are missing from the resume.
+
+4. strengths must contain specific strengths supported by the resume.
+
+5. improvements must contain practical suggestions for improving the resume.
+
+6. recommended_learning must contain useful technologies, concepts, or skills the candidate should learn.
+
+7. ats_score must be a number from 0 to 100.
+
+8. keyword_optimization must be a number from 0 to 100 representing how well the resume contains important keywords from the job description.
+
+9. skills_relevance must be a number from 0 to 100 representing how closely the candidate's technical skills match the requirements of the job.
+
+10. resume_structure must be a number from 0 to 100 representing how well the resume is organized and ATS-friendly.
+
+11. job_alignment must be a number from 0 to 100 representing how closely the overall resume aligns with the target job.
+
+12. ats_issues must contain specific ATS-related problems found in the resume.
+
+13. ats_recommendations must contain practical actions that would improve the ATS score.
+
+14. Do not invent experience, projects, certifications, technologies, or achievements that are not present in the resume.
+
+15. Keep all lists concise, specific, and useful.
+
+16. Make the analysis specific to the provided resume and job description.
+
+17. The ATS score should reflect the quality and relevance of the actual resume, not simply the match score.
 """
 
     response = client.models.generate_content(
@@ -115,7 +158,21 @@ Rules:
     import json
 
     try:
-        analysis = json.loads(response.text)
+        response_text = response.text.strip()
+
+        # Remove accidental Markdown code fences if Gemini adds them
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]
+
+        elif response_text.startswith("```"):
+            response_text = response_text[3:]
+
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
+
+        response_text = response_text.strip()
+
+        analysis = json.loads(response_text)
 
         return {
             "analysis": analysis
@@ -133,6 +190,24 @@ Rules:
                     "The AI response could not be converted into structured data."
                 ],
                 "recommended_learning": [],
+
+                "ats_score": 0,
+
+                "ats_analysis": {
+                    "keyword_optimization": 0,
+                    "skills_relevance": 0,
+                    "resume_structure": 0,
+                    "job_alignment": 0
+                },
+
+                "ats_issues": [
+                    "The AI response could not be converted into structured ATS data."
+                ],
+
+                "ats_recommendations": [
+                    "Try analyzing the resume again."
+                ],
+
                 "raw_response": response.text
             }
         }

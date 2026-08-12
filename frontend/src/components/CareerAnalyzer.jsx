@@ -506,6 +506,194 @@ function CareerAnalyzer() {
       )}
 
       {/* ================================
+    ATS RESUME SCORE
+================================= */}
+
+      {analysis && analysis.ats_score !== undefined && (
+        <div className="ats-results">
+          {/* ATS SCORE HEADER */}
+
+          <div className="ats-score-card">
+            <div className="ats-score-info">
+              <p className="ats-label">📊 ATS RESUME SCORE</p>
+
+              <h2>{analysis.ats_score}%</h2>
+
+              <p className="ats-status">
+                {analysis.ats_score >= 80
+                  ? "Excellent ATS Compatibility"
+                  : analysis.ats_score >= 60
+                    ? "Good ATS Compatibility"
+                    : "Needs Improvement"}
+              </p>
+
+              <p className="ats-description">
+                Your resume's compatibility with Applicant Tracking Systems for
+                this target job.
+              </p>
+            </div>
+
+            {/* ATS SCORE CIRCLE */}
+
+            <div className="ats-circle">
+              <div
+                className="ats-circle-progress"
+                style={{
+                  "--ats-score": `${analysis.ats_score}%`,
+                }}
+              >
+                <div className="ats-circle-inner">
+                  <strong>{analysis.ats_score}%</strong>
+
+                  <span>ATS Score</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ATS BREAKDOWN */}
+
+          <div className="ats-breakdown">
+            {/* KEYWORD OPTIMIZATION */}
+
+            <div className="ats-metric-card">
+              <div className="ats-metric-icon">🔑</div>
+
+              <div className="ats-metric-content">
+                <h3>Keyword Optimization</h3>
+
+                <div className="ats-progress">
+                  <div
+                    className="ats-progress-bar"
+                    style={{
+                      width: `${analysis.ats_analysis?.keyword_optimization || 0}%`,
+                    }}
+                  />
+                </div>
+
+                <strong>
+                  {analysis.ats_analysis?.keyword_optimization || 0}%
+                </strong>
+              </div>
+            </div>
+
+            {/* SKILLS RELEVANCE */}
+
+            <div className="ats-metric-card">
+              <div className="ats-metric-icon">🧩</div>
+
+              <div className="ats-metric-content">
+                <h3>Skills Relevance</h3>
+
+                <div className="ats-progress">
+                  <div
+                    className="ats-progress-bar"
+                    style={{
+                      width: `${analysis.ats_analysis?.skills_relevance || 0}%`,
+                    }}
+                  />
+                </div>
+
+                <strong>{analysis.ats_analysis?.skills_relevance || 0}%</strong>
+              </div>
+            </div>
+
+            {/* RESUME STRUCTURE */}
+
+            <div className="ats-metric-card">
+              <div className="ats-metric-icon">📄</div>
+
+              <div className="ats-metric-content">
+                <h3>Resume Structure</h3>
+
+                <div className="ats-progress">
+                  <div
+                    className="ats-progress-bar"
+                    style={{
+                      width: `${analysis.ats_analysis?.resume_structure || 0}%`,
+                    }}
+                  />
+                </div>
+
+                <strong>{analysis.ats_analysis?.resume_structure || 0}%</strong>
+              </div>
+            </div>
+
+            {/* JOB ALIGNMENT */}
+
+            <div className="ats-metric-card">
+              <div className="ats-metric-icon">🎯</div>
+
+              <div className="ats-metric-content">
+                <h3>Job Alignment</h3>
+
+                <div className="ats-progress">
+                  <div
+                    className="ats-progress-bar"
+                    style={{
+                      width: `${analysis.ats_analysis?.job_alignment || 0}%`,
+                    }}
+                  />
+                </div>
+
+                <strong>{analysis.ats_analysis?.job_alignment || 0}%</strong>
+              </div>
+            </div>
+          </div>
+
+          {/* ATS ISSUES */}
+
+          <div className="ats-detail-card">
+            <div className="ats-detail-header">
+              <div className="ats-detail-icon warning">⚠️</div>
+
+              <div>
+                <h2>ATS Issues</h2>
+
+                <p>Potential issues that may reduce your ATS score.</p>
+              </div>
+            </div>
+
+            <div className="ats-list">
+              {analysis.ats_issues?.map((issue, index) => (
+                <div className="ats-list-item" key={index}>
+                  <span>{index + 1}</span>
+
+                  <p>{issue}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ATS RECOMMENDATIONS */}
+
+          <div className="ats-detail-card">
+            <div className="ats-detail-header">
+              <div className="ats-detail-icon recommendation">💡</div>
+
+              <div>
+                <h2>ATS Recommendations</h2>
+
+                <p>
+                  Practical steps to improve your resume's ATS compatibility.
+                </p>
+              </div>
+            </div>
+
+            <div className="ats-list">
+              {analysis.ats_recommendations?.map((recommendation, index) => (
+                <div className="ats-list-item recommendation-item" key={index}>
+                  <span>✓</span>
+
+                  <p>{recommendation}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================================
           AI RESUME COACH
       ================================= */}
 
