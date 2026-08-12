@@ -525,3 +525,69 @@ footer {
   margin: 10px 0;
   font-size: 14px;
 }
+
+/* ================================
+   AI RESUME IMPROVEMENT
+================================ */
+
+.improvement-button {
+  margin-top: 15px;
+}
+
+.secondary-button {
+  margin-left: 12px;
+  padding: 12px 22px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.secondary-button:hover {
+  transform: translateY(-2px);
+}
+
+.secondary-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.resume-improvement-section {
+  width: min(1100px, 92%);
+  margin: 45px auto;
+}
+
+.improvement-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.improvement-header h2 {
+  font-size: 30px;
+  margin: 10px 0;
+}
+
+.improvement-card {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.improvement-content p {
+  line-height: 1.7;
+  margin: 8px 0;
+}
+
+@media (max-width: 768px) {
+
+  .secondary-button {
+    margin-left: 0;
+    margin-top: 12px;
+    width: 100%;
+  }
+
+}
