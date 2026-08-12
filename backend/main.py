@@ -175,3 +175,62 @@ async def extract_resume(file: UploadFile = File(...)):
             status_code=500,
             detail=f"Could not process PDF: {str(e)}"
         )
+
+
+class ResumeImprovementRequest(BaseModel):
+    resume: str
+    job_description: str
+
+
+@app.post("/api/improve-resume")
+async def improve_resume(request: ResumeImprovementRequest):
+
+    prompt = f"""
+You are an expert technical recruiter and professional resume writer.
+
+Analyze the candidate's resume against the target job description.
+
+CANDIDATE RESUME:
+{request.resume}
+
+TARGET JOB DESCRIPTION:
+{request.job_description}
+
+Provide a professional resume improvement analysis.
+
+Return your response using exactly these sections:
+
+IMPROVED SUMMARY:
+Write a concise, ATS-friendly professional summary tailored to the target role.
+
+RESUME IMPROVEMENTS:
+Provide 5 specific improvements the candidate should make to their resume.
+
+MISSING KEYWORDS:
+List important technical skills, tools, technologies, or keywords from the job description
+that are missing or weakly represented in the resume.
+
+JOB-SPECIFIC SUGGESTIONS:
+Provide 5 actionable suggestions to make the resume stronger for this particular role.
+
+Do not invent experience, projects, skills, certifications, or achievements that are not present in the resume.
+"""
+
+    try:
+
+        response = client.models.generate_content(
+            model="gemini-3.5-flash",
+            contents=prompt
+        )
+
+        return {
+            "success": True,
+            "improvement": response.text
+        }
+
+    except Exception as e:
+
+        return {
+            "success": False,
+            "error": str(e)
+        }
