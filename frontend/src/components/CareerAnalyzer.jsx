@@ -15,6 +15,10 @@ function CareerAnalyzer() {
 
   const [error, setError] = useState("");
 
+  const [interviewPrep, setInterviewPrep] = useState(null);
+  const [interviewLoading, setInterviewLoading] = useState(false);
+  const [interviewError, setInterviewError] = useState("");
+
   // ================================
   // PDF RESUME UPLOAD
   // ================================
@@ -101,6 +105,50 @@ function CareerAnalyzer() {
       setLoading(false);
     }
   };
+  
+  const handleInterviewPrep = async () => {
+  if (!resume.trim() || !jobDescription.trim()) {
+    setInterviewError("Please provide both your resume and the job description.");
+    return;
+  }
+
+  setInterviewLoading(true);
+  setInterviewError("");
+  setInterviewPrep(null);
+
+  try {
+    const response = await fetch(
+      "http://127.0.0.1:8000/api/interview-prep",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          resume: resume,
+          job_description: jobDescription,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || "Failed to generate interview preparation.");
+    }
+
+    if (!data.success) {
+      throw new Error(data.error || "Interview preparation failed.");
+    }
+
+    setInterviewPrep(data.interview);
+  } catch (err) {
+    console.error("Interview preparation error:", err);
+    setInterviewError(err.message);
+  } finally {
+    setInterviewLoading(false);
+  }
+};
 
   // ================================
   // AI RESUME IMPROVEMENT
@@ -334,11 +382,19 @@ function CareerAnalyzer() {
         >
           {improvingResume ? "✨ Improving Resume..." : "✨ Improve My Resume"}
         </button>
+
+        <button
+          className="interview-button"
+          onClick={handleInterviewPrep}
+          disabled={interviewLoading}
+        >
+          {interviewLoading ? "🎤 Preparing Interview..." : "🎤 Prepare Me for Interview"}
+        </button>
       </div>
 
       {/* ================================
     CAREER ANALYSIS DASHBOARD
-================================= */}
+      ================================= */}
 
       {analysis && (
         <div className="career-results">
@@ -504,6 +560,184 @@ function CareerAnalyzer() {
           </div>
         </div>
       )}
+
+      {interviewError && (
+  <div className="error-message">
+    {interviewError}
+  </div>
+)}
+
+{interviewPrep && (
+  <div className="interview-results">
+    <h2>🎤 AI Interview Preparation</h2>
+
+    <section>
+      <h3>💻 Technical Questions</h3>
+      {interviewPrep.technical_questions?.map((question, index) => (
+  <div className="interview-question" key={index}>
+    <strong>
+      {index + 1}.{" "}
+      {typeof question === "string"
+        ? question
+        : question.question}
+    </strong>
+
+    {typeof question !== "string" && question.difficulty && (
+      <div>
+        <strong>Difficulty:</strong> {question.difficulty}
+      </div>
+    )}
+
+    {typeof question !== "string" && question.why_asked && (
+      <div>
+        <strong>Why it's asked:</strong> {question.why_asked}
+      </div>
+    )}
+
+    {typeof question !== "string" && question.key_points?.length > 0 && (
+      <div>
+        <strong>Key points:</strong>
+        <ul>
+          {question.key_points.map((point, pointIndex) => (
+            <li key={pointIndex}>{point}</li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </div>
+))}
+    </section>
+
+    <section>
+      <h3>👤 HR Questions</h3>
+      {interviewPrep.hr_questions?.map((question, index) => (
+  <div className="interview-question" key={index}>
+    <strong>
+      {index + 1}.{" "}
+      {typeof question === "string"
+        ? question
+        : question.question}
+    </strong>
+
+    {typeof question !== "string" && question.difficulty && (
+      <div>
+        <strong>Difficulty:</strong> {question.difficulty}
+      </div>
+    )}
+
+    {typeof question !== "string" && question.why_asked && (
+      <div>
+        <strong>Why it's asked:</strong> {question.why_asked}
+      </div>
+    )}
+
+    {typeof question !== "string" && question.key_points?.length > 0 && (
+      <div>
+        <strong>Key points:</strong>
+        <ul>
+          {question.key_points.map((point, pointIndex) => (
+            <li key={pointIndex}>{point}</li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </div>
+))}
+    </section>
+
+    <section>
+      <h3>📄 Resume-Based Questions</h3>
+      {interviewPrep.resume_questions?.map((question, index) => (
+  <div className="interview-question" key={index}>
+    <strong>
+      {index + 1}.{" "}
+      {typeof question === "string"
+        ? question
+        : question.question}
+    </strong>
+
+    {typeof question !== "string" && question.difficulty && (
+      <div>
+        <strong>Difficulty:</strong> {question.difficulty}
+      </div>
+    )}
+
+    {typeof question !== "string" && question.why_asked && (
+      <div>
+        <strong>Why it's asked:</strong> {question.why_asked}
+      </div>
+    )}
+
+    {typeof question !== "string" && question.key_points?.length > 0 && (
+      <div>
+        <strong>Key points:</strong>
+        <ul>
+          {question.key_points.map((point, pointIndex) => (
+            <li key={pointIndex}>{point}</li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </div>
+))}
+    </section>
+
+    <section>
+      <h3>🧠 Skill-Based Questions</h3>
+      {interviewPrep.skill_based_questions?.map((question, index) => (
+  <div className="interview-question" key={index}>
+    <strong>
+      {index + 1}.{" "}
+      {typeof question === "string"
+        ? question
+        : question.question}
+    </strong>
+
+    {typeof question !== "string" && question.difficulty && (
+      <div>
+        <strong>Difficulty:</strong> {question.difficulty}
+      </div>
+    )}
+
+    {typeof question !== "string" && question.why_asked && (
+      <div>
+        <strong>Why it's asked:</strong> {question.why_asked}
+      </div>
+    )}
+
+    {typeof question !== "string" && question.key_points?.length > 0 && (
+      <div>
+        <strong>Key points:</strong>
+        <ul>
+          {question.key_points.map((point, pointIndex) => (
+            <li key={pointIndex}>{point}</li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </div>
+))}
+    </section>
+
+    <section>
+      <h3>📚 Preparation Topics</h3>
+      <ul>
+        {interviewPrep.preparation_topics?.map((topic, index) => (
+          <li key={index}>{topic}</li>
+        ))}
+      </ul>
+    </section>
+
+    <section>
+      <h3>💡 Interview Tips</h3>
+      <ul>
+        {interviewPrep.interview_tips?.map((tip, index) => (
+          <li key={index}>{tip}</li>
+        ))}
+      </ul>
+    </section>
+  </div>
+)}
 
       {/* ================================
     ATS RESUME SCORE

@@ -294,7 +294,7 @@ Do not invent experience, projects, skills, certifications, or achievements that
     try:
 
         response = client.models.generate_content(
-            model="gemini-3.5-flash",
+            model="gemini-3.1-flash-lite",
             contents=prompt
         )
 
@@ -302,6 +302,124 @@ Do not invent experience, projects, skills, certifications, or achievements that
             "success": True,
             "improvement": response.text
         }
+
+    except Exception as e:
+
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+    # ============================================
+# AI INTERVIEW PREPARATION ENDPOINT
+# ============================================
+
+class InterviewPrepRequest(BaseModel):
+    resume: str
+    job_description: str
+
+
+@app.post("/api/interview-prep")
+async def interview_prep(request: InterviewPrepRequest):
+
+    prompt = f"""
+You are an expert technical interviewer, HR interviewer,
+and career coach.
+
+Create a personalized interview preparation plan for the candidate
+based ONLY on the resume and target job description provided below.
+
+CANDIDATE RESUME:
+{request.resume}
+
+TARGET JOB DESCRIPTION:
+{request.job_description}
+
+Generate interview preparation in exactly this JSON structure:
+
+{{
+    "technical_questions": [
+        {{
+            "question": "",
+            "difficulty": "",
+            "why_asked": "",
+            "key_points": []
+        }}
+    ],
+
+    "hr_questions": [
+        {{
+            "question": "",
+            "suggested_answer": ""
+        }}
+    ],
+
+    "resume_questions": [
+        {{
+            "question": "",
+            "what_to_prepare": ""
+        }}
+    ],
+
+    "skill_based_questions": [
+        {{
+            "skill": "",
+            "question": "",
+            "key_points": []
+        }}
+    ],
+
+    "preparation_topics": [],
+
+    "interview_tips": []
+}}
+
+RULES:
+
+1. Generate 5 technical questions relevant to the target job.
+2. Generate 5 HR questions suitable for an entry-level candidate.
+3. Generate 5 questions specifically based on projects,
+   education, skills, or experience mentioned in the resume.
+4. Generate 5 skill-based questions focusing on important
+   technologies mentioned in the job description.
+5. Include 5 important preparation topics.
+6. Include 5 practical interview tips.
+7. Questions should match the candidate's experience level.
+8. Do not invent projects, experience, certifications, or skills.
+9. If a technology appears in the job description but not in
+   the resume, treat it as a preparation topic rather than
+   claiming the candidate knows it.
+10. Return ONLY valid JSON.
+11. Do not use Markdown.
+12. Do not include ```json.
+13. Do not add explanations outside the JSON.
+"""
+
+    try:
+
+        response = client.models.generate_content(
+            model="gemini-3.1-flash-lite",
+            contents=prompt
+        )
+
+        import json
+
+        try:
+
+            interview_data = json.loads(response.text)
+
+            return {
+                "success": True,
+                "interview": interview_data
+            }
+
+        except json.JSONDecodeError:
+
+            return {
+                "success": False,
+                "error": "AI response could not be converted into structured data.",
+                "raw_response": response.text
+            }
 
     except Exception as e:
 
