@@ -1,11 +1,6 @@
-
 import { useState } from "react";
 
 function CareerAnalyzer() {
-  // ================================
-  // STATE
-  // ================================
-
   const [resume, setResume] = useState("");
   const [jobDescription, setJobDescription] = useState("");
 
@@ -19,7 +14,6 @@ function CareerAnalyzer() {
   const [improvingResume, setImprovingResume] = useState(false);
 
   const [error, setError] = useState("");
-
 
   // ================================
   // PDF RESUME UPLOAD
@@ -69,7 +63,6 @@ function CareerAnalyzer() {
     }
   };
 
-
   // ================================
   // CAREER ANALYSIS
   // ================================
@@ -91,11 +84,9 @@ function CareerAnalyzer() {
         "http://127.0.0.1:8000/api/analyze-career",
         {
           method: "POST",
-
           headers: {
             "Content-Type": "application/json",
           },
-
           body: JSON.stringify({
             resume: resume,
             job_description: jobDescription,
@@ -110,7 +101,6 @@ function CareerAnalyzer() {
       const data = await response.json();
 
       setAnalysis(data.analysis);
-
     } catch (error) {
       console.error(error);
 
@@ -121,7 +111,6 @@ function CareerAnalyzer() {
       setLoading(false);
     }
   };
-
 
   // ================================
   // AI RESUME IMPROVEMENT
@@ -144,11 +133,9 @@ function CareerAnalyzer() {
         "http://127.0.0.1:8000/api/improve-resume",
         {
           method: "POST",
-
           headers: {
             "Content-Type": "application/json",
           },
-
           body: JSON.stringify({
             resume: resume,
             job_description: jobDescription,
@@ -169,7 +156,6 @@ function CareerAnalyzer() {
       }
 
       setResumeImprovement(data.improvement);
-
     } catch (error) {
       console.error(error);
 
@@ -181,6 +167,96 @@ function CareerAnalyzer() {
     }
   };
 
+  // ================================
+  // FORMAT AI RESPONSE
+  // ================================
+
+  const formatImprovement = (text) => {
+    if (!text) {
+      return {
+        summary: "",
+        improvements: [],
+        keywords: [],
+        suggestions: [],
+      };
+    }
+
+    const sections = {
+      summary: "",
+      improvements: [],
+      keywords: [],
+      suggestions: [],
+    };
+
+    const lines = text
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    let currentSection = "";
+
+    lines.forEach((line) => {
+      const upperLine = line.toUpperCase();
+
+      if (
+        upperLine.includes("IMPROVED SUMMARY")
+      ) {
+        currentSection = "summary";
+        return;
+      }
+
+      if (
+        upperLine.includes("RESUME IMPROVEMENTS")
+      ) {
+        currentSection = "improvements";
+        return;
+      }
+
+      if (
+        upperLine.includes("MISSING KEYWORDS")
+      ) {
+        currentSection = "keywords";
+        return;
+      }
+
+      if (
+        upperLine.includes("JOB-SPECIFIC SUGGESTIONS") ||
+        upperLine.includes("JOB SPECIFIC SUGGESTIONS")
+      ) {
+        currentSection = "suggestions";
+        return;
+      }
+
+      const cleanedLine = line
+        .replace(/^[-•*]\s*/, "")
+        .replace(/^\d+[\).\s]+/, "")
+        .trim();
+
+      if (!cleanedLine) return;
+
+      if (currentSection === "summary") {
+        sections.summary +=
+          (sections.summary ? " " : "") + cleanedLine;
+      }
+
+      if (currentSection === "improvements") {
+        sections.improvements.push(cleanedLine);
+      }
+
+      if (currentSection === "keywords") {
+        sections.keywords.push(cleanedLine);
+      }
+
+      if (currentSection === "suggestions") {
+        sections.suggestions.push(cleanedLine);
+      }
+    });
+
+    return sections;
+  };
+
+  const improvementSections =
+    formatImprovement(resumeImprovement);
 
   // ================================
   // UI
@@ -189,9 +265,7 @@ function CareerAnalyzer() {
   return (
     <section className="analyzer-page">
 
-      {/* ================================
-          HEADER
-      ================================= */}
+      {/* HEADER */}
 
       <div className="analyzer-header">
 
@@ -211,16 +285,11 @@ function CareerAnalyzer() {
       </div>
 
 
-      {/* ================================
-          INPUT SECTION
-      ================================= */}
+      {/* INPUT AREA */}
 
       <div className="analyzer-container">
 
-
-        {/* ================================
-            RESUME CARD
-        ================================= */}
+        {/* RESUME */}
 
         <div className="input-card">
 
@@ -231,9 +300,6 @@ function CareerAnalyzer() {
           <p>
             Upload your resume PDF or paste your resume below.
           </p>
-
-
-          {/* PDF UPLOAD */}
 
           <label className="upload-button">
 
@@ -248,24 +314,17 @@ function CareerAnalyzer() {
 
           </label>
 
-
-          {/* UPLOAD STATUS */}
-
           {uploading && (
             <p className="upload-status">
               🤖 Extracting your resume...
             </p>
           )}
 
-
           {resumeFile && !uploading && (
             <p className="upload-status">
               ✅ {resumeFile.name} uploaded successfully
             </p>
           )}
-
-
-          {/* RESUME TEXT */}
 
           <textarea
             placeholder="Paste your resume here..."
@@ -275,7 +334,6 @@ function CareerAnalyzer() {
             }
           />
 
-
           <div className="character-count">
             {resume.length} characters
           </div>
@@ -283,9 +341,7 @@ function CareerAnalyzer() {
         </div>
 
 
-        {/* ================================
-            JOB DESCRIPTION CARD
-        ================================= */}
+        {/* JOB DESCRIPTION */}
 
         <div className="input-card">
 
@@ -297,7 +353,6 @@ function CareerAnalyzer() {
             Paste the job description you're applying for.
           </p>
 
-
           <textarea
             placeholder="Paste the job description here..."
             value={jobDescription}
@@ -305,7 +360,6 @@ function CareerAnalyzer() {
               setJobDescription(e.target.value)
             }
           />
-
 
           <div className="character-count">
             {jobDescription.length} characters
@@ -316,9 +370,7 @@ function CareerAnalyzer() {
       </div>
 
 
-      {/* ================================
-          ERROR MESSAGE
-      ================================= */}
+      {/* ERROR */}
 
       {error && (
         <div className="error-message">
@@ -327,56 +379,41 @@ function CareerAnalyzer() {
       )}
 
 
-      {/* ================================
-          ACTION BUTTONS
-      ================================= */}
+      {/* BUTTONS */}
 
       <div className="analyze-section">
-
-        {/* ANALYZE BUTTON */}
 
         <button
           className="primary-button analyze-button"
           onClick={handleAnalyze}
           disabled={loading}
         >
-
           {loading
             ? "🤖 Analyzing..."
-            : "🚀 Analyze My Career"
-          }
-
+            : "🚀 Analyze My Career"}
         </button>
 
-
-        {/* IMPROVE RESUME BUTTON */}
 
         <button
           className="secondary-button improve-button"
           onClick={handleImproveResume}
           disabled={improvingResume}
         >
-
           {improvingResume
             ? "✨ Improving Resume..."
-            : "✨ Improve My Resume"
-          }
-
+            : "✨ Improve My Resume"}
         </button>
 
       </div>
 
 
-      {/* ================================
-          CAREER ANALYSIS RESULTS
-      ================================= */}
+      {/* CAREER ANALYSIS */}
 
       {analysis && (
 
         <div className="career-results">
 
-
-          {/* MATCH SCORE */}
+          {/* SCORE */}
 
           <div className="score-card">
 
@@ -399,12 +436,9 @@ function CareerAnalyzer() {
           </div>
 
 
-          {/* SKILLS GRID */}
+          {/* SKILLS */}
 
           <div className="result-grid">
-
-
-            {/* MATCHING SKILLS */}
 
             <div className="result-card">
 
@@ -416,14 +450,12 @@ function CareerAnalyzer() {
 
                 {analysis.matching_skills?.map(
                   (skill, index) => (
-
                     <span
                       className="skill-tag"
                       key={index}
                     >
                       {skill}
                     </span>
-
                   )
                 )}
 
@@ -431,8 +463,6 @@ function CareerAnalyzer() {
 
             </div>
 
-
-            {/* SKILL GAPS */}
 
             <div className="result-card">
 
@@ -444,14 +474,12 @@ function CareerAnalyzer() {
 
                 {analysis.missing_skills?.map(
                   (skill, index) => (
-
                     <span
                       className="gap-tag"
                       key={index}
                     >
                       {skill}
                     </span>
-
                   )
                 )}
 
@@ -474,11 +502,9 @@ function CareerAnalyzer() {
 
               {analysis.strengths?.map(
                 (item, index) => (
-
                   <li key={index}>
                     {item}
                   </li>
-
                 )
               )}
 
@@ -499,11 +525,9 @@ function CareerAnalyzer() {
 
               {analysis.improvements?.map(
                 (item, index) => (
-
                   <li key={index}>
                     {item}
                   </li>
-
                 )
               )}
 
@@ -512,7 +536,7 @@ function CareerAnalyzer() {
           </div>
 
 
-          {/* RECOMMENDED LEARNING */}
+          {/* LEARNING */}
 
           <div className="result-card full-card">
 
@@ -524,11 +548,9 @@ function CareerAnalyzer() {
 
               {analysis.recommended_learning?.map(
                 (item, index) => (
-
                   <li key={index}>
                     {item}
                   </li>
-
                 )
               )}
 
@@ -542,53 +564,228 @@ function CareerAnalyzer() {
 
 
       {/* ================================
-          AI RESUME IMPROVEMENT
+          AI RESUME COACH
       ================================= */}
 
       {resumeImprovement && (
 
-        <div className="resume-improvement-section">
+        <div className="resume-coach">
 
+          <div className="coach-header">
 
-          {/* HEADER */}
+            <div className="coach-icon">
+              ✨
+            </div>
 
-          <div className="improvement-header">
+            <div>
 
-            <p className="badge">
-              AI RESUME COACH
-            </p>
+              <p className="coach-label">
+                AI RESUME COACH
+              </p>
 
-            <h2>
-              ✨ Resume Improvement Suggestions
-            </h2>
+              <h2>
+                Make Your Resume Stronger
+              </h2>
 
-            <p>
-              Personalized recommendations based on your
-              resume and target job.
-            </p>
-
-          </div>
-
-
-          {/* IMPROVEMENT CARD */}
-
-          <div className="improvement-card">
-
-            <div className="improvement-content">
-
-              {resumeImprovement
-                .split("\n")
-                .map((line, index) => (
-
-                  <p key={index}>
-                    {line}
-                  </p>
-
-                ))}
+              <p>
+                Personalized recommendations based on
+                your resume and target job.
+              </p>
 
             </div>
 
           </div>
+
+
+          {/* SUMMARY */}
+
+          {improvementSections.summary && (
+
+            <div className="coach-card summary-card">
+
+              <div className="coach-card-title">
+                <span>📝</span>
+
+                <div>
+                  <h3>
+                    Improved Professional Summary
+                  </h3>
+
+                  <p>
+                    A stronger summary tailored to your
+                    target role.
+                  </p>
+                </div>
+
+              </div>
+
+              <div className="summary-text">
+                {improvementSections.summary}
+              </div>
+
+            </div>
+
+          )}
+
+
+          {/* IMPROVEMENTS */}
+
+          {improvementSections.improvements.length > 0 && (
+
+            <div className="coach-card">
+
+              <div className="coach-card-title">
+
+                <span>📈</span>
+
+                <div>
+
+                  <h3>
+                    Resume Improvements
+                  </h3>
+
+                  <p>
+                    Changes that can make your resume
+                    more effective.
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <div className="coach-list">
+
+                {improvementSections.improvements.map(
+                  (item, index) => (
+
+                    <div
+                      className="coach-list-item"
+                      key={index}
+                    >
+
+                      <span className="number">
+                        {index + 1}
+                      </span>
+
+                      <p>
+                        {item}
+                      </p>
+
+                    </div>
+
+                  )
+                )}
+
+              </div>
+
+            </div>
+
+          )}
+
+
+          {/* KEYWORDS */}
+
+          {improvementSections.keywords.length > 0 && (
+
+            <div className="coach-card">
+
+              <div className="coach-card-title">
+
+                <span>🔑</span>
+
+                <div>
+
+                  <h3>
+                    Missing Keywords
+                  </h3>
+
+                  <p>
+                    Important skills or technologies
+                    mentioned in the job description.
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <div className="keyword-container">
+
+                {improvementSections.keywords.map(
+                  (keyword, index) => (
+
+                    <span
+                      className="keyword-pill"
+                      key={index}
+                    >
+                      {keyword}
+                    </span>
+
+                  )
+                )}
+
+              </div>
+
+            </div>
+
+          )}
+
+
+          {/* SUGGESTIONS */}
+
+          {improvementSections.suggestions.length > 0 && (
+
+            <div className="coach-card">
+
+              <div className="coach-card-title">
+
+                <span>🎯</span>
+
+                <div>
+
+                  <h3>
+                    Job-Specific Suggestions
+                  </h3>
+
+                  <p>
+                    Actionable ways to improve your
+                    chances for this role.
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <div className="coach-list">
+
+                {improvementSections.suggestions.map(
+                  (item, index) => (
+
+                    <div
+                      className="coach-list-item"
+                      key={index}
+                    >
+
+                      <span className="number">
+                        {index + 1}
+                      </span>
+
+                      <p>
+                        {item}
+                      </p>
+
+                    </div>
+
+                  )
+                )}
+
+              </div>
+
+            </div>
+
+          )}
 
         </div>
 
