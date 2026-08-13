@@ -2325,3 +2325,184 @@ footer {
   cursor: not-allowed;
   transform: none;
 }
+
+/* =========================================================
+   FINAL MOCK INTERVIEW REPORT
+   ========================================================= */
+
+.mock-final-report {
+  width: 100%;
+  max-width: 1100px;
+  margin: 32px auto;
+  padding: 32px;
+  background: #ffffff;
+  border: 1px solid #dbe3f0;
+  border-radius: 24px;
+  box-shadow: 0 12px 35px rgba(30, 50, 90, 0.08);
+  box-sizing: border-box;
+}
+
+/* Header */
+
+.final-report-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e5eaf2;
+}
+
+.final-report-icon {
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef4ff;
+  border-radius: 16px;
+  font-size: 30px;
+}
+
+.final-report-header h2 {
+  margin: 0 0 5px;
+  font-size: 28px;
+  color: #172554;
+}
+
+.final-report-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 15px;
+}
+
+/* Overall score */
+
+.final-overall-score {
+  margin: 28px 0;
+  padding: 28px;
+  text-align: center;
+  background: #f8faff;
+  border: 1px solid #dbe7ff;
+  border-radius: 18px;
+}
+
+.final-overall-score span {
+  display: block;
+  margin-bottom: 8px;
+  color: #64748b;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.final-overall-score strong {
+  display: block;
+  color: #1d4ed8;
+  font-size: 42px;
+  line-height: 1.1;
+}
+
+/* Score cards */
+
+.final-score-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 30px;
+}
+
+.final-score-card {
+  padding: 22px;
+  text-align: center;
+  background: #ffffff;
+  border: 1px solid #dbe3f0;
+  border-radius: 18px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.final-score-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(30, 50, 90, 0.08);
+}
+
+.final-score-card span {
+  display: block;
+  font-size: 25px;
+  margin-bottom: 8px;
+}
+
+.final-score-card h3 {
+  margin: 0 0 8px;
+  color: #334155;
+  font-size: 16px;
+}
+
+.final-score-card strong {
+  color: #1e3a8a;
+  font-size: 26px;
+}
+
+/* Report sections */
+
+.final-report-section {
+  margin-top: 22px;
+  padding: 22px 24px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+}
+
+.final-report-section h3,
+.final-report-feedback h3 {
+  margin: 0 0 15px;
+  color: #1e293b;
+  font-size: 19px;
+}
+
+.final-report-section ul {
+  margin: 0;
+  padding-left: 22px;
+}
+
+.final-report-section li {
+  margin-bottom: 9px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+/* Final feedback */
+
+.final-report-feedback {
+  margin-top: 22px;
+  padding: 24px;
+  background: #f8faff;
+  border-left: 4px solid #2563eb;
+  border-radius: 14px;
+}
+
+.final-report-feedback p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.7;
+  font-size: 15px;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .mock-final-report {
+    padding: 22px;
+    margin: 20px auto;
+  }
+
+  .final-score-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .final-report-header h2 {
+    font-size: 23px;
+  }
+
+  .final-overall-score strong {
+    font-size: 36px;
+  }
+}
