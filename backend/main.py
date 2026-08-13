@@ -310,6 +310,225 @@ Do not invent experience, projects, skills, certifications, or achievements that
             "error": str(e)
         }
 
+# ============================================================
+# AI MOCK INTERVIEW
+# ============================================================
+
+class MockInterviewStartRequest(BaseModel):
+    resume: str
+    job_description: str
+    previous_questions: list[str] = []
+
+
+class MockInterviewAnswerRequest(BaseModel):
+    resume: str
+    job_description: str
+    question: str
+    answer: str
+
+
+@app.post("/api/mock-interview/start")
+async def start_mock_interview(request: MockInterviewStartRequest):
+
+    prompt = f"""
+You are an expert technical interviewer conducting a mock interview.
+
+Create the FIRST interview question for this candidate based on their resume
+and the target job description.
+
+This is a continuing mock interview, so you MUST NOT repeat any question
+from the previous questions list.
+
+CANDIDATE RESUME:
+{request.resume}
+
+TARGET JOB DESCRIPTION:
+{request.job_description}
+
+PREVIOUS QUESTIONS:
+{request.previous_questions}
+
+Return ONLY valid JSON.
+
+Use exactly this structure:
+
+{{
+    "question": "Interview question here",
+    "category": "Technical",
+    "difficulty": "Medium",
+    "why_asked": "Why this question is relevant to the candidate and role"
+}}
+
+Rules:
+- Ask only ONE question.
+- The question must be relevant to the candidate's resume and target role.
+- DO NOT repeat or closely rephrase any previous question.
+- Do not invent experience that is not present in the resume.
+- The question can be technical, project-based, behavioral, or resume-based.
+- Keep the question suitable for an entry-level candidate.
+- Return valid JSON only.
+"""
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.1-flash-lite",
+            contents=prompt,
+            config={
+               "response_mime_type": "application/json"
+            }
+        )
+
+        import json
+
+        result = json.loads(response.text)
+
+        return {
+            "success": True,
+            "question": result
+        }
+
+    except Exception as e:
+
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+class MockInterviewNextRequest(BaseModel):
+    resume: str
+    job_description: str
+    previous_questions: list[str]
+
+
+@app.post("/api/mock-interview/next")
+async def next_mock_interview(request: MockInterviewNextRequest):
+
+    prompt = f"""
+You are an expert technical interviewer conducting a mock interview.
+
+Create the NEXT interview question for this candidate based on their resume
+and the target job description.
+
+CANDIDATE RESUME:
+{request.resume}
+
+TARGET JOB DESCRIPTION:
+{request.job_description}
+
+QUESTIONS ALREADY ASKED:
+{request.previous_questions}
+
+Return ONLY valid JSON.
+
+Use exactly this structure:
+
+{{
+    "question": "Interview question here",
+    "category": "Technical",
+    "difficulty": "Medium",
+    "why_asked": "Why this question is relevant to the candidate and role"
+}}
+
+Rules:
+
+- Ask only ONE new question.
+- DO NOT repeat any question from the QUESTIONS ALREADY ASKED list.
+- The question must be relevant to the candidate's resume and target role.
+- Do not invent experience that is not present in the resume.
+- The question can be technical, project-based, behavioral, or resume-based.
+- Keep the question suitable for an entry-level candidate.
+- Return valid JSON only.
+"""
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.1-flash-lite",
+            contents=prompt
+        )
+
+        import json
+
+        result = json.loads(response.text)
+
+        return {
+            "success": True,
+            "question": result
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@app.post("/api/mock-interview/evaluate")
+async def evaluate_mock_interview(
+    request: MockInterviewAnswerRequest
+):
+
+    prompt = f"""
+You are an expert technical interviewer.
+
+Evaluate the candidate's answer to the interview question.
+
+CANDIDATE RESUME:
+{request.resume}
+
+TARGET JOB DESCRIPTION:
+{request.job_description}
+
+INTERVIEW QUESTION:
+{request.question}
+
+CANDIDATE ANSWER:
+{request.answer}
+
+Return ONLY valid JSON.
+
+Use exactly this structure:
+
+{{
+    "score": 0,
+    "strengths": [],
+    "improvements": [],
+    "feedback": "",
+    "better_answer": ""
+}}
+
+Rules:
+
+- score must be a number from 0 to 10.
+- strengths must contain specific positive aspects of the answer.
+- improvements must contain practical suggestions.
+- feedback must give concise interviewer-style feedback.
+- better_answer should show how the candidate could answer more effectively.
+- Do not invent experience, projects, skills, or achievements.
+- Judge the answer based on the question, resume, and target role.
+- Return valid JSON only.
+"""
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.1-flash-lite",
+            contents=prompt
+        )
+
+        import json
+
+        result = json.loads(response.text)
+
+        return {
+            "success": True,
+            "evaluation": result
+        }
+
+    except Exception as e:
+
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
     # ============================================
 # AI INTERVIEW PREPARATION ENDPOINT
 # ============================================

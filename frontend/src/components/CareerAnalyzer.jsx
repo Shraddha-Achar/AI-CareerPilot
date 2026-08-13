@@ -19,6 +19,20 @@ function CareerAnalyzer() {
   const [interviewLoading, setInterviewLoading] = useState(false);
   const [interviewError, setInterviewError] = useState("");
 
+  const [mockInterview, setMockInterview] = useState(null);
+  const [mockInterviewLoading, setMockInterviewLoading] = useState(false);
+  const [mockInterviewError, setMockInterviewError] = useState("");
+
+  const [mockInterviewQuestionNumber, setMockInterviewQuestionNumber] =
+    useState(1);
+
+  const [mockPreviousQuestions, setMockPreviousQuestions] = useState([]);
+
+  const [mockAnswer, setMockAnswer] = useState("");
+  const [mockEvaluation, setMockEvaluation] = useState(null);
+  const [mockEvaluationLoading, setMockEvaluationLoading] = useState(false);
+  const [mockEvaluationError, setMockEvaluationError] = useState("");
+
   // ================================
   // PDF RESUME UPLOAD
   // ================================
@@ -105,21 +119,21 @@ function CareerAnalyzer() {
       setLoading(false);
     }
   };
-  
+
   const handleInterviewPrep = async () => {
-  if (!resume.trim() || !jobDescription.trim()) {
-    setInterviewError("Please provide both your resume and the job description.");
-    return;
-  }
+    if (!resume.trim() || !jobDescription.trim()) {
+      setInterviewError(
+        "Please provide both your resume and the job description.",
+      );
+      return;
+    }
 
-  setInterviewLoading(true);
-  setInterviewError("");
-  setInterviewPrep(null);
+    setInterviewLoading(true);
+    setInterviewError("");
+    setInterviewPrep(null);
 
-  try {
-    const response = await fetch(
-      "http://127.0.0.1:8000/api/interview-prep",
-      {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/interview-prep", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -128,27 +142,177 @@ function CareerAnalyzer() {
           resume: resume,
           job_description: jobDescription,
         }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.detail || "Failed to generate interview preparation.",
+        );
       }
-    );
 
-    const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.error || "Interview preparation failed.");
+      }
 
-    if (!response.ok) {
-      throw new Error(data.detail || "Failed to generate interview preparation.");
+      setInterviewPrep(data.interview);
+    } catch (err) {
+      console.error("Interview preparation error:", err);
+      setInterviewError(err.message);
+    } finally {
+      setInterviewLoading(false);
+    }
+  };
+
+  const handleStartMockInterview = async () => {
+    if (!resume.trim() || !jobDescription.trim()) {
+      setMockInterviewError(
+        "Please provide both your resume and job description.",
+      );
+      return;
     }
 
-    if (!data.success) {
-      throw new Error(data.error || "Interview preparation failed.");
+    setMockInterviewLoading(true);
+    setMockInterviewError("");
+    setMockInterview(null);
+    setMockInterviewQuestionNumber(1);
+    setMockPreviousQuestions([]);
+
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/mock-interview/start",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            resume: resume,
+            job_description: jobDescription,
+            previous_questions: mockPreviousQuestions,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Failed to start mock interview.");
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || "Could not start mock interview.");
+      }
+
+      setMockInterview(data.question);
+      setMockPreviousQuestions([data.question.question]);
+    } catch (error) {
+      console.error("Mock interview error:", error);
+      setMockInterviewError(error.message);
+    } finally {
+      setMockInterviewLoading(false);
+    }
+  };
+
+  const handleNextMockQuestion = async () => {
+    setMockInterviewLoading(true);
+    setMockInterviewError("");
+    setMockEvaluation(null);
+    setMockAnswer("");
+
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/mock-interview/next",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            resume: resume,
+            job_description: jobDescription,
+            previous_questions: mockPreviousQuestions,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Failed to generate next question.");
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || "Could not generate next question.");
+      }
+
+      setMockInterview(data.question);
+
+      setMockPreviousQuestions([
+        ...mockPreviousQuestions,
+        data.question.question,
+      ]);
+
+      setMockInterviewQuestionNumber(mockInterviewQuestionNumber + 1);
+    } catch (error) {
+      console.error("Next question error:", error);
+      setMockInterviewError(error.message);
+    } finally {
+      setMockInterviewLoading(false);
+    }
+  };
+
+  const handleSubmitMockAnswer = async () => {
+    if (!mockAnswer.trim()) {
+      setMockEvaluationError("Please enter your answer before submitting.");
+      return;
     }
 
-    setInterviewPrep(data.interview);
-  } catch (err) {
-    console.error("Interview preparation error:", err);
-    setInterviewError(err.message);
-  } finally {
-    setInterviewLoading(false);
-  }
-};
+    if (!mockInterview?.question) {
+      setMockEvaluationError("No interview question is available.");
+      return;
+    }
+
+    setMockEvaluationLoading(true);
+    setMockEvaluationError("");
+    setMockEvaluation(null);
+
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/mock-interview/evaluate",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            resume: resume,
+            job_description: jobDescription,
+            question: mockInterview.question,
+            answer: mockAnswer,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Failed to evaluate your answer.");
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || "Could not evaluate your answer.");
+      }
+
+      setMockEvaluation(data.evaluation);
+    } catch (error) {
+      console.error("Mock interview evaluation error:", error);
+      setMockEvaluationError(error.message);
+    } finally {
+      setMockEvaluationLoading(false);
+    }
+  };
 
   // ================================
   // AI RESUME IMPROVEMENT
@@ -366,9 +530,9 @@ function CareerAnalyzer() {
 
       {/* BUTTONS */}
 
-      <div className="analyze-section">
+      <div className="analyze-section action-buttons">
         <button
-          className="primary-button analyze-button"
+          className="primary-button analyze-button action-button"
           onClick={handleAnalyze}
           disabled={loading}
         >
@@ -376,7 +540,7 @@ function CareerAnalyzer() {
         </button>
 
         <button
-          className="secondary-button improve-button"
+          className="secondary-button improve-button action-button"
           onClick={handleImproveResume}
           disabled={improvingResume}
         >
@@ -384,11 +548,23 @@ function CareerAnalyzer() {
         </button>
 
         <button
-          className="interview-button"
+          className="interview-button action-button"
           onClick={handleInterviewPrep}
           disabled={interviewLoading}
         >
-          {interviewLoading ? "🎤 Preparing Interview..." : "🎤 Prepare Me for Interview"}
+          {interviewLoading
+            ? "🎤 Preparing Interview..."
+            : "🎤 Prepare Me for Interview"}
+        </button>
+
+        <button
+          className="mock-interview-button action-button"
+          onClick={handleStartMockInterview}
+          disabled={mockInterviewLoading}
+        >
+          {mockInterviewLoading
+            ? "🎤 Starting Interview..."
+            : "🎤 Start Mock Interview"}
         </button>
       </div>
 
@@ -561,183 +737,281 @@ function CareerAnalyzer() {
         </div>
       )}
 
-      {interviewError && (
-  <div className="error-message">
-    {interviewError}
-  </div>
-)}
+      {interviewError && <div className="error-message">{interviewError}</div>}
 
-{interviewPrep && (
-  <div className="interview-results">
-    <h2>🎤 AI Interview Preparation</h2>
+      {interviewPrep && (
+        <div className="interview-results">
+          <h2>🎤 AI Interview Preparation</h2>
 
-    <section>
-      <h3>💻 Technical Questions</h3>
-      {interviewPrep.technical_questions?.map((question, index) => (
-  <div className="interview-question" key={index}>
-    <strong>
-      {index + 1}.{" "}
-      {typeof question === "string"
-        ? question
-        : question.question}
-    </strong>
+          <section>
+            <h3>💻 Technical Questions</h3>
+            {interviewPrep.technical_questions?.map((question, index) => (
+              <div className="interview-question" key={index}>
+                <strong>
+                  {index + 1}.{" "}
+                  {typeof question === "string" ? question : question.question}
+                </strong>
 
-    {typeof question !== "string" && question.difficulty && (
-      <div>
-        <strong>Difficulty:</strong> {question.difficulty}
-      </div>
-    )}
+                {typeof question !== "string" && question.difficulty && (
+                  <div>
+                    <strong>Difficulty:</strong> {question.difficulty}
+                  </div>
+                )}
 
-    {typeof question !== "string" && question.why_asked && (
-      <div>
-        <strong>Why it's asked:</strong> {question.why_asked}
-      </div>
-    )}
+                {typeof question !== "string" && question.why_asked && (
+                  <div>
+                    <strong>Why it's asked:</strong> {question.why_asked}
+                  </div>
+                )}
 
-    {typeof question !== "string" && question.key_points?.length > 0 && (
-      <div>
-        <strong>Key points:</strong>
-        <ul>
-          {question.key_points.map((point, pointIndex) => (
-            <li key={pointIndex}>{point}</li>
-          ))}
-        </ul>
-      </div>
-    )}
-  </div>
-))}
-    </section>
+                {typeof question !== "string" &&
+                  question.key_points?.length > 0 && (
+                    <div>
+                      <strong>Key points:</strong>
+                      <ul>
+                        {question.key_points.map((point, pointIndex) => (
+                          <li key={pointIndex}>{point}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+              </div>
+            ))}
+          </section>
 
-    <section>
-      <h3>👤 HR Questions</h3>
-      {interviewPrep.hr_questions?.map((question, index) => (
-  <div className="interview-question" key={index}>
-    <strong>
-      {index + 1}.{" "}
-      {typeof question === "string"
-        ? question
-        : question.question}
-    </strong>
+          <section>
+            <h3>👤 HR Questions</h3>
+            {interviewPrep.hr_questions?.map((question, index) => (
+              <div className="interview-question" key={index}>
+                <strong>
+                  {index + 1}.{" "}
+                  {typeof question === "string" ? question : question.question}
+                </strong>
 
-    {typeof question !== "string" && question.difficulty && (
-      <div>
-        <strong>Difficulty:</strong> {question.difficulty}
-      </div>
-    )}
+                {typeof question !== "string" && question.difficulty && (
+                  <div>
+                    <strong>Difficulty:</strong> {question.difficulty}
+                  </div>
+                )}
 
-    {typeof question !== "string" && question.why_asked && (
-      <div>
-        <strong>Why it's asked:</strong> {question.why_asked}
-      </div>
-    )}
+                {typeof question !== "string" && question.why_asked && (
+                  <div>
+                    <strong>Why it's asked:</strong> {question.why_asked}
+                  </div>
+                )}
 
-    {typeof question !== "string" && question.key_points?.length > 0 && (
-      <div>
-        <strong>Key points:</strong>
-        <ul>
-          {question.key_points.map((point, pointIndex) => (
-            <li key={pointIndex}>{point}</li>
-          ))}
-        </ul>
-      </div>
-    )}
-  </div>
-))}
-    </section>
+                {typeof question !== "string" &&
+                  question.key_points?.length > 0 && (
+                    <div>
+                      <strong>Key points:</strong>
+                      <ul>
+                        {question.key_points.map((point, pointIndex) => (
+                          <li key={pointIndex}>{point}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+              </div>
+            ))}
+          </section>
 
-    <section>
-      <h3>📄 Resume-Based Questions</h3>
-      {interviewPrep.resume_questions?.map((question, index) => (
-  <div className="interview-question" key={index}>
-    <strong>
-      {index + 1}.{" "}
-      {typeof question === "string"
-        ? question
-        : question.question}
-    </strong>
+          <section>
+            <h3>📄 Resume-Based Questions</h3>
+            {interviewPrep.resume_questions?.map((question, index) => (
+              <div className="interview-question" key={index}>
+                <strong>
+                  {index + 1}.{" "}
+                  {typeof question === "string" ? question : question.question}
+                </strong>
 
-    {typeof question !== "string" && question.difficulty && (
-      <div>
-        <strong>Difficulty:</strong> {question.difficulty}
-      </div>
-    )}
+                {typeof question !== "string" && question.difficulty && (
+                  <div>
+                    <strong>Difficulty:</strong> {question.difficulty}
+                  </div>
+                )}
 
-    {typeof question !== "string" && question.why_asked && (
-      <div>
-        <strong>Why it's asked:</strong> {question.why_asked}
-      </div>
-    )}
+                {typeof question !== "string" && question.why_asked && (
+                  <div>
+                    <strong>Why it's asked:</strong> {question.why_asked}
+                  </div>
+                )}
 
-    {typeof question !== "string" && question.key_points?.length > 0 && (
-      <div>
-        <strong>Key points:</strong>
-        <ul>
-          {question.key_points.map((point, pointIndex) => (
-            <li key={pointIndex}>{point}</li>
-          ))}
-        </ul>
-      </div>
-    )}
-  </div>
-))}
-    </section>
+                {typeof question !== "string" &&
+                  question.key_points?.length > 0 && (
+                    <div>
+                      <strong>Key points:</strong>
+                      <ul>
+                        {question.key_points.map((point, pointIndex) => (
+                          <li key={pointIndex}>{point}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+              </div>
+            ))}
+          </section>
 
-    <section>
-      <h3>🧠 Skill-Based Questions</h3>
-      {interviewPrep.skill_based_questions?.map((question, index) => (
-  <div className="interview-question" key={index}>
-    <strong>
-      {index + 1}.{" "}
-      {typeof question === "string"
-        ? question
-        : question.question}
-    </strong>
+          <section>
+            <h3>🧠 Skill-Based Questions</h3>
+            {interviewPrep.skill_based_questions?.map((question, index) => (
+              <div className="interview-question" key={index}>
+                <strong>
+                  {index + 1}.{" "}
+                  {typeof question === "string" ? question : question.question}
+                </strong>
 
-    {typeof question !== "string" && question.difficulty && (
-      <div>
-        <strong>Difficulty:</strong> {question.difficulty}
-      </div>
-    )}
+                {typeof question !== "string" && question.difficulty && (
+                  <div>
+                    <strong>Difficulty:</strong> {question.difficulty}
+                  </div>
+                )}
 
-    {typeof question !== "string" && question.why_asked && (
-      <div>
-        <strong>Why it's asked:</strong> {question.why_asked}
-      </div>
-    )}
+                {typeof question !== "string" && question.why_asked && (
+                  <div>
+                    <strong>Why it's asked:</strong> {question.why_asked}
+                  </div>
+                )}
 
-    {typeof question !== "string" && question.key_points?.length > 0 && (
-      <div>
-        <strong>Key points:</strong>
-        <ul>
-          {question.key_points.map((point, pointIndex) => (
-            <li key={pointIndex}>{point}</li>
-          ))}
-        </ul>
-      </div>
-    )}
-  </div>
-))}
-    </section>
+                {typeof question !== "string" &&
+                  question.key_points?.length > 0 && (
+                    <div>
+                      <strong>Key points:</strong>
+                      <ul>
+                        {question.key_points.map((point, pointIndex) => (
+                          <li key={pointIndex}>{point}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+              </div>
+            ))}
+          </section>
 
-    <section>
-      <h3>📚 Preparation Topics</h3>
-      <ul>
-        {interviewPrep.preparation_topics?.map((topic, index) => (
-          <li key={index}>{topic}</li>
-        ))}
-      </ul>
-    </section>
+          <section>
+            <h3>📚 Preparation Topics</h3>
+            <ul>
+              {interviewPrep.preparation_topics?.map((topic, index) => (
+                <li key={index}>{topic}</li>
+              ))}
+            </ul>
+          </section>
 
-    <section>
-      <h3>💡 Interview Tips</h3>
-      <ul>
-        {interviewPrep.interview_tips?.map((tip, index) => (
-          <li key={index}>{tip}</li>
-        ))}
-      </ul>
-    </section>
-  </div>
-)}
+          <section>
+            <h3>💡 Interview Tips</h3>
+            <ul>
+              {interviewPrep.interview_tips?.map((tip, index) => (
+                <li key={index}>{tip}</li>
+              ))}
+            </ul>
+          </section>
+        </div>
+      )}
+
+      {mockInterviewError && (
+        <div className="error-message">{mockInterviewError}</div>
+      )}
+
+      {mockInterview && (
+        <div className="mock-interview-container">
+          <div className="mock-interview-header">
+            <span>🎤</span>
+
+            <div>
+              <h2>AI Mock Interview</h2>
+              <p>Question {mockInterviewQuestionNumber}</p>
+            </div>
+          </div>
+
+          <div className="mock-interview-question">
+            <div className="mock-interview-meta">
+              <span>{mockInterview.category}</span>
+              <span>{mockInterview.difficulty}</span>
+            </div>
+
+            <h3>{mockInterview.question}</h3>
+
+            {mockInterview.why_asked && (
+              <p className="mock-interview-why">
+                <strong>💡 Why this is asked:</strong> {mockInterview.why_asked}
+              </p>
+            )}
+            {/* CANDIDATE ANSWER */}
+            <div className="mock-answer-section">
+              <h3>✍️ Your Answer</h3>
+
+              <textarea
+                value={mockAnswer}
+                onChange={(e) => setMockAnswer(e.target.value)}
+                placeholder="Type your answer here..."
+                rows={8}
+              />
+
+              <button
+                className="mock-submit-button"
+                onClick={handleSubmitMockAnswer}
+                disabled={mockEvaluationLoading}
+              >
+                {mockEvaluationLoading
+                  ? "🤖 Evaluating..."
+                  : "📤 Submit Answer"}
+              </button>
+            </div>
+
+            {/* EVALUATION ERROR */}
+            {mockEvaluationError && (
+              <div className="error-message">{mockEvaluationError}</div>
+            )}
+
+            {/* AI EVALUATION */}
+            {mockEvaluation && (
+              <div className="mock-evaluation">
+                <h2>📊 Interview Evaluation</h2>
+
+                <div className="mock-score">
+                  <strong>Score:</strong> {mockEvaluation.score}/10
+                </div>
+
+                <section>
+                  <h3>💪 Strengths</h3>
+                  <ul>
+                    {mockEvaluation.strengths?.map((strength, index) => (
+                      <li key={index}>{strength}</li>
+                    ))}
+                  </ul>
+                </section>
+
+                <section>
+                  <h3>🔧 Improvements</h3>
+                  <ul>
+                    {mockEvaluation.improvements?.map((improvement, index) => (
+                      <li key={index}>{improvement}</li>
+                    ))}
+                  </ul>
+                </section>
+
+                <section>
+                  <h3>💬 Interviewer Feedback</h3>
+                  <p>{mockEvaluation.feedback}</p>
+                </section>
+
+                <section>
+                  <h3>✨ Better Answer</h3>
+                  <p>{mockEvaluation.better_answer}</p>
+                </section>
+              </div>
+            )}
+            {mockInterviewQuestionNumber < 5 && (
+              <button
+                className="mock-next-button"
+                onClick={handleNextMockQuestion}
+                disabled={mockInterviewLoading}
+              >
+                {mockInterviewLoading ? "🤖 Preparing..." : "➡️ Next Question"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ================================
     ATS RESUME SCORE
