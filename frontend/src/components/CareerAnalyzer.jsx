@@ -30,6 +30,10 @@ function CareerAnalyzer() {
 
   const [mockAnswer, setMockAnswer] = useState("");
   const [mockEvaluation, setMockEvaluation] = useState(null);
+  const [mockEvaluations, setMockEvaluations] = useState([]);
+  const [mockFinalReport, setMockFinalReport] = useState(null);
+  const [mockFinalReportLoading, setMockFinalReportLoading] = useState(false);
+  const [mockFinalReportError, setMockFinalReportError] = useState("");
   const [mockEvaluationLoading, setMockEvaluationLoading] = useState(false);
   const [mockEvaluationError, setMockEvaluationError] = useState("");
 
@@ -176,6 +180,10 @@ function CareerAnalyzer() {
     setMockInterviewLoading(true);
     setMockInterviewError("");
     setMockInterview(null);
+    setMockEvaluations([]);
+    setMockFinalReport(null);
+    setMockFinalReportLoading(false);
+    setMockFinalReportError("");
     setMockInterviewQuestionNumber(1);
     setMockPreviousQuestions([]);
 
@@ -263,6 +271,57 @@ function CareerAnalyzer() {
     }
   };
 
+  const generateMockFinalReport = async () => {
+    if (mockEvaluations.length === 0) {
+      setMockFinalReportError(
+        "Please complete at least one interview question first.",
+      );
+      return;
+    }
+
+    setMockFinalReportLoading(true);
+    setMockFinalReportError("");
+    setMockFinalReport(null);
+
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/mock-interview/final-report",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            resume: resume,
+            job_description: jobDescription,
+            evaluations: mockEvaluations,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.detail || "Failed to generate final interview report.",
+        );
+      }
+
+      if (!data.success) {
+        throw new Error(
+          data.error || "Could not generate final interview report.",
+        );
+      }
+
+      setMockFinalReport(data.report);
+    } catch (error) {
+      console.error("Final interview report error:", error);
+      setMockFinalReportError(error.message);
+    } finally {
+      setMockFinalReportLoading(false);
+    }
+  };
+
   const handleSubmitMockAnswer = async () => {
     if (!mockAnswer.trim()) {
       setMockEvaluationError("Please enter your answer before submitting.");
@@ -306,6 +365,14 @@ function CareerAnalyzer() {
       }
 
       setMockEvaluation(data.evaluation);
+      setMockEvaluations((previousEvaluations) => [
+        ...previousEvaluations,
+        {
+          question: mockInterview.question,
+          answer: mockAnswer,
+          evaluation: data.evaluation,
+        },
+      ]);
     } catch (error) {
       console.error("Mock interview evaluation error:", error);
       setMockEvaluationError(error.message);
@@ -1000,7 +1067,7 @@ function CareerAnalyzer() {
                 </section>
               </div>
             )}
-            {mockInterviewQuestionNumber < 5 && (
+            {mockInterviewQuestionNumber < 5 ? (
               <button
                 className="mock-next-button"
                 onClick={handleNextMockQuestion}
@@ -1008,8 +1075,103 @@ function CareerAnalyzer() {
               >
                 {mockInterviewLoading ? "🤖 Preparing..." : "➡️ Next Question"}
               </button>
+            ) : (
+              <button
+                className="mock-next-button"
+                onClick={generateMockFinalReport}
+                disabled={mockFinalReportLoading}
+              >
+                {mockFinalReportLoading
+                  ? "🤖 Generating Report..."
+                  : "🏆 Finish Interview"}
+              </button>
             )}
           </div>
+        </div>
+      )}
+
+      {mockFinalReportError && (
+        <div className="error-message">{mockFinalReportError}</div>
+      )}
+
+      {mockFinalReport && (
+        <div className="mock-final-report">
+          <div className="final-report-header">
+            <div className="final-report-icon">🏆</div>
+
+            <div>
+              <h2>Interview Complete!</h2>
+              <p>Here is your overall AI interview assessment.</p>
+            </div>
+          </div>
+
+          {/* OVERALL SCORE */}
+          <div className="final-overall-score">
+            <span>Overall Score</span>
+
+            <strong>{mockFinalReport.overall_score}/10</strong>
+          </div>
+
+          {/* PERFORMANCE SCORES */}
+          <div className="final-score-grid">
+            <div className="final-score-card">
+              <span>💻</span>
+              <h3>Technical</h3>
+              <strong>{mockFinalReport.technical_score}/10</strong>
+            </div>
+
+            <div className="final-score-card">
+              <span>🗣️</span>
+              <h3>Communication</h3>
+              <strong>{mockFinalReport.communication_score}/10</strong>
+            </div>
+
+            <div className="final-score-card">
+              <span>🎯</span>
+              <h3>Relevance</h3>
+              <strong>{mockFinalReport.relevance_score}/10</strong>
+            </div>
+          </div>
+
+          {/* STRONGEST AREAS */}
+          <section className="final-report-section">
+            <h3>💪 Strongest Areas</h3>
+
+            <ul>
+              {mockFinalReport.strongest_areas?.map((area, index) => (
+                <li key={index}>{area}</li>
+              ))}
+            </ul>
+          </section>
+
+          {/* AREAS TO IMPROVE */}
+          <section className="final-report-section">
+            <h3>🔧 Areas to Improve</h3>
+
+            <ul>
+              {mockFinalReport.areas_to_improve?.map((area, index) => (
+                <li key={index}>{area}</li>
+              ))}
+            </ul>
+          </section>
+
+          {/* RECOMMENDED TOPICS */}
+          <section className="final-report-section">
+            <h3>📚 Recommended Topics</h3>
+
+            <ul>
+              {mockFinalReport.recommended_topics?.map((topic, index) => (
+                <li key={index}>{topic}</li>
+              ))}
+            </ul>
+          </section>
+
+          {/* FINAL FEEDBACK */}
+          <section className="final-report-feedback">
+            <h3>💬 Final Interviewer Feedback</h3>
+
+            <p>{mockFinalReport.final_feedback}</p>
+          </section>
         </div>
       )}
 

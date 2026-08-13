@@ -326,6 +326,11 @@ class MockInterviewAnswerRequest(BaseModel):
     question: str
     answer: str
 
+class MockInterviewFinalReportRequest(BaseModel):
+    resume: str
+    job_description: str
+    evaluations: list[dict]
+
 
 @app.post("/api/mock-interview/start")
 async def start_mock_interview(request: MockInterviewStartRequest):
@@ -524,6 +529,79 @@ Rules:
 
     except Exception as e:
 
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@app.post("/api/mock-interview/final-report")
+async def generate_mock_interview_final_report(
+    request: MockInterviewFinalReportRequest
+):
+
+    prompt = f"""
+You are an expert technical interviewer.
+
+Generate a final interview performance report for the candidate based on
+their resume, target job description, and all completed mock interview
+evaluations.
+
+CANDIDATE RESUME:
+{request.resume}
+
+TARGET JOB DESCRIPTION:
+{request.job_description}
+
+INTERVIEW EVALUATIONS:
+{request.evaluations}
+
+Return ONLY valid JSON.
+
+Use exactly this structure:
+
+{{
+    "overall_score": 0,
+    "technical_score": 0,
+    "communication_score": 0,
+    "relevance_score": 0,
+    "strongest_areas": [],
+    "areas_to_improve": [],
+    "recommended_topics": [],
+    "final_feedback": ""
+}}
+
+Rules:
+
+- All scores must be numbers from 0 to 10.
+- overall_score should represent the candidate's overall interview performance.
+- technical_score should reflect technical knowledge and correctness.
+- communication_score should reflect clarity, structure, and completeness of answers.
+- relevance_score should reflect how well the candidate answered questions according to the resume and job description.
+- strongest_areas must contain specific strengths demonstrated across the interview.
+- areas_to_improve must contain practical and specific improvements.
+- recommended_topics must contain useful topics the candidate should study before a real interview.
+- final_feedback must be concise, professional interviewer-style feedback.
+- Do not invent experience, projects, skills, or achievements.
+- Base the report only on the provided resume, job description, questions, answers, and evaluations.
+- Return valid JSON only.
+"""
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.1-flash-lite",
+            contents=prompt
+        )
+
+        import json
+
+        result = json.loads(response.text)
+
+        return {
+            "success": True,
+            "report": result
+        }
+
+    except Exception as e:
         return {
             "success": False,
             "error": str(e)
