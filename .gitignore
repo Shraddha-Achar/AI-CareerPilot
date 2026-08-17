@@ -17,3 +17,5 @@ frontend/dist/
 # Environment files
 .env
 *.env
+frontend/src/components/CareerAnalyzer_9.2C_Backup.jsx
+frontend/src/components/CareerAnalyzer_backup.jsx

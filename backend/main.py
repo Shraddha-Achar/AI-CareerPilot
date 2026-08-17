@@ -26,7 +26,7 @@ client = genai.Client(api_key=api_key)
 # Create FastAPI application
 app = FastAPI(title="AI CareerPilot API")
 
-
+frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
 # Allow React frontend to communicate with FastAPI
 app.add_middleware(
     CORSMiddleware,
@@ -320,11 +320,19 @@ class MockInterviewStartRequest(BaseModel):
     previous_questions: list[str] = []
 
 
+class MockInterviewNextRequest(BaseModel):
+    resume: str
+    job_description: str
+    previous_questions: list[str] = []
+    previous_evaluations: list[dict] = []
+
+
 class MockInterviewAnswerRequest(BaseModel):
     resume: str
     job_description: str
     question: str
     answer: str
+
 
 class MockInterviewFinalReportRequest(BaseModel):
     resume: str
@@ -332,17 +340,21 @@ class MockInterviewFinalReportRequest(BaseModel):
     evaluations: list[dict]
 
 
+# ============================================================
+# START MOCK INTERVIEW
+# ============================================================
+
 @app.post("/api/mock-interview/start")
 async def start_mock_interview(request: MockInterviewStartRequest):
 
     prompt = f"""
-You are an expert technical interviewer conducting a mock interview.
+You are an expert technical interviewer conducting a realistic
+mock interview for an entry-level candidate.
 
-Create the FIRST interview question for this candidate based on their resume
-and the target job description.
-
-This is a continuing mock interview, so you MUST NOT repeat any question
-from the previous questions list.
+Your task is to create the FIRST interview question using ONLY:
+1. The candidate's resume.
+2. The target job description.
+3. General technical knowledge appropriate for the target role.
 
 CANDIDATE RESUME:
 {request.resume}
@@ -353,6 +365,27 @@ TARGET JOB DESCRIPTION:
 PREVIOUS QUESTIONS:
 {request.previous_questions}
 
+IMPORTANT RESUME-GROUNDING RULES:
+
+- The candidate may only be questioned about experience, projects,
+  responsibilities, technologies, achievements, or activities that
+  are explicitly supported by the resume.
+- Never assume that the candidate performed a task simply because
+  it is common for the target role.
+- Never invent a project, responsibility, optimization, achievement,
+  metric, technology, certification, or work experience.
+- If asking about the candidate's experience, base the question on
+  something explicitly mentioned in the resume.
+- Technical questions may test standard knowledge required by the
+  job description even if that knowledge is not listed in the resume.
+- If a technology appears only in the job description and not in the
+  resume, treat it as a knowledge question, NOT as previous experience.
+- Ask exactly ONE question.
+- The question must be appropriate for an entry-level candidate.
+- Do not repeat or closely rephrase any previous question.
+
+Choose the most useful first question for the candidate.
+
 Return ONLY valid JSON.
 
 Use exactly this structure:
@@ -364,14 +397,7 @@ Use exactly this structure:
     "why_asked": "Why this question is relevant to the candidate and role"
 }}
 
-Rules:
-- Ask only ONE question.
-- The question must be relevant to the candidate's resume and target role.
-- DO NOT repeat or closely rephrase any previous question.
-- Do not invent experience that is not present in the resume.
-- The question can be technical, project-based, behavioral, or resume-based.
-- Keep the question suitable for an entry-level candidate.
-- Return valid JSON only.
+Return valid JSON only.
 """
 
     try:
@@ -379,11 +405,9 @@ Rules:
             model="gemini-3.1-flash-lite",
             contents=prompt,
             config={
-               "response_mime_type": "application/json"
+                "response_mime_type": "application/json"
             }
         )
-
-        import json
 
         result = json.loads(response.text)
 
@@ -393,26 +417,30 @@ Rules:
         }
 
     except Exception as e:
-
         return {
             "success": False,
             "error": str(e)
         }
 
-class MockInterviewNextRequest(BaseModel):
-    resume: str
-    job_description: str
-    previous_questions: list[str]
 
+# ============================================================
+# NEXT MOCK INTERVIEW QUESTION
+# ============================================================
 
 @app.post("/api/mock-interview/next")
 async def next_mock_interview(request: MockInterviewNextRequest):
 
     prompt = f"""
-You are an expert technical interviewer conducting a mock interview.
+You are an expert technical interviewer conducting a realistic
+mock interview for an entry-level candidate.
 
-Create the NEXT interview question for this candidate based on their resume
-and the target job description.
+Create the NEXT interview question.
+
+Use:
+1. The candidate's resume.
+2. The target job description.
+3. Questions already asked.
+4. Previous interview evaluations.
 
 CANDIDATE RESUME:
 {request.resume}
@@ -423,6 +451,31 @@ TARGET JOB DESCRIPTION:
 QUESTIONS ALREADY ASKED:
 {request.previous_questions}
 
+PREVIOUS EVALUATIONS:
+{request.previous_evaluations}
+
+IMPORTANT:
+
+- Ask exactly ONE new question.
+- Never repeat or closely rephrase a previous question.
+- Do not invent candidate experience.
+- If asking about resume experience, use ONLY facts explicitly
+  mentioned in the resume.
+- Do not assume the candidate has used a technology just because
+  it appears in the job description.
+- Technologies in the job description that are absent from the
+  resume may be tested as knowledge questions, but must NOT be
+  presented as previous experience.
+- Use previous evaluations to make the interview progressive when
+  appropriate.
+- If the candidate performed poorly on a concept, a follow-up or
+  foundational question may be useful.
+- If the candidate performed well, gradually increase difficulty.
+- Do not create fictional projects, achievements, metrics,
+  responsibilities, or work situations.
+- Keep the question suitable for an entry-level candidate.
+- The question must be relevant to the target role.
+
 Return ONLY valid JSON.
 
 Use exactly this structure:
@@ -434,24 +487,17 @@ Use exactly this structure:
     "why_asked": "Why this question is relevant to the candidate and role"
 }}
 
-Rules:
-
-- Ask only ONE new question.
-- DO NOT repeat any question from the QUESTIONS ALREADY ASKED list.
-- The question must be relevant to the candidate's resume and target role.
-- Do not invent experience that is not present in the resume.
-- The question can be technical, project-based, behavioral, or resume-based.
-- Keep the question suitable for an entry-level candidate.
-- Return valid JSON only.
+Return valid JSON only.
 """
 
     try:
         response = client.models.generate_content(
             model="gemini-3.1-flash-lite",
-            contents=prompt
+            contents=prompt,
+            config={
+                "response_mime_type": "application/json"
+            }
         )
-
-        import json
 
         result = json.loads(response.text)
 
@@ -466,15 +512,23 @@ Rules:
             "error": str(e)
         }
 
+
+# ============================================================
+# EVALUATE MOCK INTERVIEW ANSWER
+# ============================================================
+
 @app.post("/api/mock-interview/evaluate")
 async def evaluate_mock_interview(
     request: MockInterviewAnswerRequest
 ):
 
     prompt = f"""
-You are an expert technical interviewer.
+You are an expert technical interviewer and interview coach.
 
 Evaluate the candidate's answer to the interview question.
+
+Your evaluation must be fair, constructive, technically accurate,
+and strictly grounded in the information provided.
 
 CANDIDATE RESUME:
 {request.resume}
@@ -487,6 +541,60 @@ INTERVIEW QUESTION:
 
 CANDIDATE ANSWER:
 {request.answer}
+
+Evaluate the answer using these four dimensions:
+
+1. RELEVANCE
+Did the candidate actually answer the question that was asked?
+
+2. TECHNICAL CORRECTNESS
+Are the technical statements accurate and appropriate?
+
+3. RESUME AUTHENTICITY
+Did the candidate make claims about experience, projects,
+technologies, responsibilities, achievements, or metrics that
+are unsupported by the resume or their answer?
+
+4. COMMUNICATION
+Was the answer clear, structured, concise, and easy to understand?
+
+IMPORTANT RULES FOR THE BETTER ANSWER:
+
+- Improve the candidate's actual answer.
+- Preserve the candidate's real experience.
+- NEVER invent a project, responsibility, technology, achievement,
+  metric, optimization, company experience, or work situation.
+- NEVER create a fictional example and present it as something
+  the candidate actually did.
+- Do not add technologies merely because they appear in the
+  job description.
+- If the candidate's answer lacks enough information for a
+  specific example, explicitly say so.
+- When information is missing, provide a safe answer structure
+  or explain what the candidate should include instead.
+- If giving an example, clearly label it as a hypothetical example.
+- Do not fabricate numbers such as percentages, performance gains,
+  user counts, time savings, or other metrics.
+
+SCORING GUIDELINES:
+
+9-10 = Excellent answer: directly answers the question, technically
+      correct, relevant, clear, and sufficiently detailed.
+
+7-8 = Good answer: mostly correct and relevant, with minor gaps.
+
+5-6 = Partially satisfactory: some correct information but important
+      details are missing or the answer is only partly relevant.
+
+3-4 = Weak answer: significant relevance, technical, or communication
+      problems.
+
+0-2 = Very poor answer: incorrect, irrelevant, or fails to answer
+      the question.
+
+Do not give a high score simply because the answer contains
+technically correct information. The answer must address the
+actual question.
 
 Return ONLY valid JSON.
 
@@ -504,21 +612,21 @@ Rules:
 
 - score must be a number from 0 to 10.
 - strengths must contain specific positive aspects of the answer.
-- improvements must contain practical suggestions.
-- feedback must give concise interviewer-style feedback.
-- better_answer should show how the candidate could answer more effectively.
-- Do not invent experience, projects, skills, or achievements.
-- Judge the answer based on the question, resume, and target role.
+- improvements must contain practical and actionable suggestions.
+- feedback must be constructive interviewer-style feedback.
+- better_answer must improve the candidate's answer without
+  inventing experience.
 - Return valid JSON only.
 """
 
     try:
         response = client.models.generate_content(
             model="gemini-3.1-flash-lite",
-            contents=prompt
+            contents=prompt,
+            config={
+                "response_mime_type": "application/json"
+            }
         )
-
-        import json
 
         result = json.loads(response.text)
 
@@ -528,11 +636,15 @@ Rules:
         }
 
     except Exception as e:
-
         return {
             "success": False,
             "error": str(e)
         }
+
+
+# ============================================================
+# FINAL MOCK INTERVIEW REPORT
+# ============================================================
 
 @app.post("/api/mock-interview/final-report")
 async def generate_mock_interview_final_report(
@@ -540,11 +652,11 @@ async def generate_mock_interview_final_report(
 ):
 
     prompt = f"""
-You are an expert technical interviewer.
+You are an expert technical interviewer and career coach.
 
-Generate a final interview performance report for the candidate based on
-their resume, target job description, and all completed mock interview
-evaluations.
+Generate a final performance report for the candidate based ONLY
+on their resume, target job description, interview questions,
+candidate answers, and evaluations.
 
 CANDIDATE RESUME:
 {request.resume}
@@ -554,6 +666,39 @@ TARGET JOB DESCRIPTION:
 
 INTERVIEW EVALUATIONS:
 {request.evaluations}
+
+IMPORTANT:
+
+- Do not invent experience, projects, skills, achievements,
+  responsibilities, or technologies.
+- Do not assume that the candidate has experience with a technology
+  simply because it appears in the job description.
+- Evaluate only what the candidate actually demonstrated.
+- Do not reward answers merely for containing technical keywords.
+- Relevance to the actual questions must strongly influence the score.
+- If the candidate repeatedly gives answers unrelated to questions,
+  relevance_score should reflect that.
+- Recommended topics may include technologies or concepts from the
+  job description that the candidate should study, even if they
+  are absent from the resume. Clearly treat these as study topics,
+  not existing skills.
+
+SCORING:
+
+overall_score:
+Overall interview performance based on technical knowledge,
+communication, and relevance.
+
+technical_score:
+Technical correctness and understanding demonstrated in answers.
+
+communication_score:
+Clarity, structure, completeness, and professionalism.
+
+relevance_score:
+How directly the candidate answered the questions asked.
+
+All scores must be from 0 to 10.
 
 Return ONLY valid JSON.
 
@@ -572,27 +717,23 @@ Use exactly this structure:
 
 Rules:
 
-- All scores must be numbers from 0 to 10.
-- overall_score should represent the candidate's overall interview performance.
-- technical_score should reflect technical knowledge and correctness.
-- communication_score should reflect clarity, structure, and completeness of answers.
-- relevance_score should reflect how well the candidate answered questions according to the resume and job description.
-- strongest_areas must contain specific strengths demonstrated across the interview.
-- areas_to_improve must contain practical and specific improvements.
-- recommended_topics must contain useful topics the candidate should study before a real interview.
-- final_feedback must be concise, professional interviewer-style feedback.
-- Do not invent experience, projects, skills, or achievements.
-- Base the report only on the provided resume, job description, questions, answers, and evaluations.
+- strongest_areas must be based on demonstrated performance.
+- areas_to_improve must be specific and actionable.
+- recommended_topics should help the candidate prepare for the
+  target role.
+- final_feedback must be concise, professional, and constructive.
+- Never fabricate candidate experience.
 - Return valid JSON only.
 """
 
     try:
         response = client.models.generate_content(
             model="gemini-3.1-flash-lite",
-            contents=prompt
+            contents=prompt,
+            config={
+                "response_mime_type": "application/json"
+            }
         )
-
-        import json
 
         result = json.loads(response.text)
 
@@ -607,7 +748,116 @@ Rules:
             "error": str(e)
         }
 
-    # ============================================
+
+# ============================================================
+# JOB READINESS DASHBOARD
+# ============================================================
+
+class JobReadinessRequest(BaseModel):
+    match_score: float | None = None
+    ats_score: float | None = None
+    interview_overall: float | None = None
+    communication_score: float | None = None
+    relevance_score: float | None = None
+
+
+@app.post("/api/job-readiness")
+async def job_readiness(request: JobReadinessRequest):
+    """
+    Combines the existing Resume/Career Analysis and Mock Interview
+    results into one dashboard-ready score.
+
+    Resume component:
+      - 60% job match
+      - 40% ATS compatibility
+
+    Interview component:
+      - overall interview score
+
+    Final readiness:
+      - 55% resume component
+      - 45% interview component
+
+    If the interview report is not available yet, the endpoint returns
+    a resume-only score and marks the interview as pending.
+    """
+
+    match = max(0, min(100, float(request.match_score or 0)))
+    ats = max(0, min(100, float(request.ats_score or 0)))
+
+    resume_score = round((match * 0.60) + (ats * 0.40))
+
+    has_interview = request.interview_overall is not None
+    interview_score = (
+        max(0, min(100, float(request.interview_overall) * 10))
+        if has_interview
+        else None
+    )
+
+    if has_interview:
+        readiness = round((resume_score * 0.55) + (interview_score * 0.45))
+    else:
+        readiness = resume_score
+
+    recommendations = []
+
+    if match < 70:
+        recommendations.append(
+            "Improve resume-to-job alignment by addressing important missing skills and keywords."
+        )
+
+    if ats < 70:
+        recommendations.append(
+            "Improve ATS compatibility by strengthening keyword optimization and resume structure."
+        )
+
+    if has_interview and interview_score < 70:
+        recommendations.append(
+            "Practice more mock interview questions and focus on answering the exact question asked."
+        )
+
+    if has_interview and request.communication_score is not None:
+        communication = max(0, min(100, float(request.communication_score) * 10))
+        if communication < 70:
+            recommendations.append(
+                "Practice clearer, more structured, and concise interview responses."
+            )
+
+    if has_interview and request.relevance_score is not None:
+        relevance = max(0, min(100, float(request.relevance_score) * 10))
+        if relevance < 70:
+            recommendations.append(
+                "Focus on directly addressing the interview question before adding supporting details."
+            )
+
+    if not recommendations:
+        recommendations.append(
+            "Keep practicing and maintain your current strengths across resume and interview preparation."
+        )
+
+    return {
+        "success": True,
+        "job_readiness": readiness,
+        "resume_score": resume_score,
+        "match_score": round(match),
+        "ats_score": round(ats),
+        "interview_score": round(interview_score) if interview_score is not None else None,
+        "communication_score": (
+            round(max(0, min(100, float(request.communication_score) * 10)))
+            if request.communication_score is not None
+            else None
+        ),
+        "relevance_score": (
+            round(max(0, min(100, float(request.relevance_score) * 10)))
+            if request.relevance_score is not None
+            else None
+        ),
+        "interview_pending": not has_interview,
+        "recommendations": recommendations,
+    }
+
+
+# ============================================
 # AI INTERVIEW PREPARATION ENDPOINT
 # ============================================
 
