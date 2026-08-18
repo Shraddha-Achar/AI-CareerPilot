@@ -1190,6 +1190,7 @@ function CareerAnalyzer() {
       }
 
       const data = await response.json();
+      
 
       setResume(data.text);
       // Create a new resume version
