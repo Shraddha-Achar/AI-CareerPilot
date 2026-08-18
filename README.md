@@ -1,46 +1,80 @@
 # 🤖 AI CareerPilot
 
-> An AI-powered career assistant that analyzes resumes against job descriptions, identifies skill gaps, and provides personalized career recommendations.
+> An AI-powered career assistant that analyzes resumes against job descriptions, identifies skill gaps, improves resumes, and helps users prepare for interviews.
 
-AI CareerPilot is a full-stack AI application designed to help job seekers understand how well their resume matches a target role and identify the skills they should improve.
+AI CareerPilot is a full-stack AI-powered career platform designed to help job seekers understand how well their resume matches a target role and improve their career readiness.
 
-Users can upload their resume as a PDF, automatically extract the resume content, provide a target job description, and receive AI-powered career insights.
+Users can upload a resume as a PDF, automatically extract its content, provide a target job description, and receive AI-powered career insights, resume improvements, interview preparation, and mock interview practice.
+
+---
+
+## 🌍 Live Demo
+
+🚀 **Live Application:** [Open AI CareerPilot](https://ai-careerpilot-1.onrender.com)
+
+🔗 **Backend API:** [FastAPI API](https://ai-careerp​ilot-wfn7.onrender.com)
+
+📖 **API Documentation:** [Swagger UI](https://ai-careerp​ilot-wfn7.onrender.com/docs)
 
 ---
 
 ## ✨ Features
 
-### 📄 Resume PDF Upload
+### 📄 Resume PDF Upload & Extraction
 
-Upload a PDF resume and automatically extract its text using Python.
+Upload a PDF resume and automatically extract its text using Python and `pypdf`.
 
 ### 🎯 Resume–Job Match Analysis
 
 Compare the candidate's resume with a target job description using Google's Gemini AI.
 
-### 📊 AI Match Score
+### 🤖 ATS Score
 
-Get an AI-generated percentage indicating how closely the resume matches the target role.
+Evaluate the resume for ATS compatibility and identify areas that can be improved.
+
+### 📊 Job Readiness Analysis
+
+Analyze overall career readiness based on resume, job requirements, and interview performance.
 
 ### ✅ Matching Skills
 
-Identify technical skills and qualifications already present in the resume.
+Identify technical skills, qualifications, and experience already matching the target role.
 
 ### ⚠️ Skill Gap Detection
 
-Discover important skills mentioned in the job description that are missing from the resume.
+Discover important skills mentioned in the job description that are missing or need improvement.
 
 ### 💪 Strength Analysis
 
-Understand the candidate's strongest areas based on their resume.
+Identify the candidate's strongest areas based on their resume and target role.
 
-### 📈 Improvement Suggestions
+### ✍️ AI Resume Improvement
 
-Receive actionable recommendations for improving skills and resume content.
+Generate personalized suggestions to improve resume content, keywords, structure, and job alignment.
 
 ### 📚 Personalized Learning Recommendations
 
-Get suggestions for technologies, concepts, and skills to learn based on identified gaps.
+Recommend technologies, concepts, and skills to learn based on identified skill gaps.
+
+### 🗺️ Career Roadmap
+
+Provide personalized career focus areas and recommended actions based on the user's career goals and analysis.
+
+### 🎤 Interview Preparation
+
+Generate interview preparation guidance based on the target role and candidate profile.
+
+### 🎙️ AI Mock Interview
+
+Practice interview questions through an AI-powered mock interview experience.
+
+### 📈 Resume Version History
+
+Track different resume versions and monitor changes in career readiness metrics over time.
+
+### 📊 Career Progress Tracking
+
+Track metrics such as ATS score, job match, interview performance, and job readiness across resume versions.
 
 ---
 
@@ -59,6 +93,8 @@ Get suggestions for technologies, concepts, and skills to learn based on identif
 * Python
 * FastAPI
 * Uvicorn
+* Pydantic
+* python-dotenv
 * pypdf
 
 ### AI
@@ -71,6 +107,10 @@ Get suggestions for technologies, concepts, and skills to learn based on identif
 * Git
 * GitHub
 * Visual Studio Code
+
+### Deployment
+
+* Render
 
 ---
 
@@ -125,12 +165,15 @@ Get suggestions for technologies, concepts, and skills to learn based on identif
 
 1. User uploads their resume in PDF format.
 2. FastAPI receives the uploaded file.
-3. `pypdf` extracts the text from the resume.
+3. `pypdf` extracts the resume text.
 4. User provides a target job description.
 5. Resume content and job requirements are sent to Gemini.
-6. Gemini analyzes the candidate's profile against the job.
-7. The backend returns structured career analysis.
-8. React displays the results in an interactive dashboard.
+6. Gemini analyzes the candidate's profile against the target role.
+7. CareerPilot calculates and displays career readiness metrics.
+8. Users receive matching skills, skill gaps, strengths, improvements, and learning recommendations.
+9. Users can improve their resume using AI-generated suggestions.
+10. Users can prepare for interviews and practice using the AI mock interview.
+11. Resume versions and progress metrics are stored for future comparison.
 
 ---
 
@@ -200,7 +243,7 @@ Activate it:
 Install dependencies:
 
 ```powershell
-pip install fastapi uvicorn python-dotenv google-genai pypdf python-multipart
+pip install -r requirements.txt
 ```
 
 ---
@@ -296,7 +339,7 @@ Never expose your Gemini API key publicly.
 
 ---
 
-# 📌 Project Roadmap
+## 📌 Project Roadmap
 
 ### Completed
 
@@ -305,30 +348,35 @@ Never expose your Gemini API key publicly.
 * [x] Gemini API integration
 * [x] Prompt-based career analysis
 * [x] Resume–job matching
-* [x] Match score
+* [x] ATS score analysis
+* [x] Job readiness analysis
 * [x] Skill gap analysis
 * [x] Learning recommendations
 * [x] PDF resume upload
 * [x] PDF text extraction
-* [x] GitHub integration
+* [x] AI resume improvement
+* [x] Interview preparation
+* [x] AI mock interview
+* [x] Career roadmap
+* [x] Career action center
+* [x] Resume version history
+* [x] Career progress tracking
+* [x] Production deployment
+* [x] Environment-based API configuration
 
-### Upcoming
+### Future Improvements
 
-* [ ] AI-powered resume improvement
-* [ ] Resume keyword optimization
-* [ ] AI interview question generator
-* [ ] Personalized career roadmap
-* [ ] Job recommendation system
-* [ ] Resume scoring improvements
-* [ ] OCR support for scanned resumes
 * [ ] User authentication
-* [ ] Deployment to cloud
-
+* [ ] Job recommendation system
+* [ ] OCR support for scanned resumes
+* [ ] Advanced resume keyword optimization
+* [ ] Persistent cloud database
+* [ ] Additional AI career analytics
 ---
 
 ## 🎯 Future Vision
 
-AI CareerPilot aims to become an intelligent career companion that helps users:
+AI CareerPilot aims to become an intelligent career companion that helps users throughout their complete job-search journey:
 
 ```text
 Resume
@@ -339,12 +387,15 @@ Skill Gap Detection
    ↓
 Resume Improvement
    ↓
-Learning Roadmap
+Career Roadmap
+   ↓
+Learning Recommendations
    ↓
 Interview Preparation
    ↓
+Mock Interview
+   ↓
 Job Recommendations
-```
 
 ---
 
